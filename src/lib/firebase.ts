@@ -1,6 +1,6 @@
 import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, type Firestore } from 'firebase/firestore';
 
 const config = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -15,9 +15,15 @@ const config = {
 export const firebaseConfigured = Boolean(config.apiKey && config.projectId);
 
 let app: FirebaseApp | undefined;
-if (firebaseConfigured) app = getApps()[0] ?? initializeApp(config);
+let db: Firestore | undefined;
+if (firebaseConfigured) {
+  const existing = getApps()[0]; // fast refresh re-runs this module
+  app = existing ?? initializeApp(config);
+  // ignoreUndefinedProperties lets optional fields (due, myDay…) be written as undefined.
+  db = existing ? getFirestore(app) : initializeFirestore(app, { ignoreUndefinedProperties: true });
+}
 
 // TODO(step 8): native auth persistence via getReactNativePersistence + AsyncStorage,
 // and Firestore offline persistence.
 export const auth: Auth | undefined = app && getAuth(app);
-export const db: Firestore | undefined = app && getFirestore(app);
+export { db };

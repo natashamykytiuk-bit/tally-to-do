@@ -1,4 +1,5 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,8 +8,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
 import { auth, firebaseConfigured } from '@/lib/firebase';
+import { useAuth } from '@/providers/auth';
 
 export default function SignIn() {
+  const { user } = useAuth();
   const theme = useTheme();
   const [mode, setMode] = useState<'in' | 'up'>('in');
   const [email, setEmail] = useState('');
@@ -17,6 +20,7 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
 
   const a = auth;
+  if (user) return <Redirect href="/" />;
   if (!firebaseConfigured || !a) {
     return (
       <ThemedView style={styles.fill}>

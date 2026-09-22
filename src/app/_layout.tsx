@@ -8,21 +8,13 @@ import { AuthProvider, useAuth } from '@/providers/auth';
 SplashScreen.preventAutoHideAsync();
 
 function RootStack() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
   if (loading) return null;
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Protected guard={!!user}>
-        <Stack.Screen name="index" />
-      </Stack.Protected>
-      <Stack.Protected guard={!user}>
-        <Stack.Screen name="(auth)/sign-in" />
-      </Stack.Protected>
-    </Stack>
-  );
+  // Each screen redirects itself based on auth state (see index.tsx and sign-in.tsx).
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
 
 export default function RootLayout() {
