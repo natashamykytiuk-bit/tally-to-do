@@ -1,4 +1,4 @@
-import { fractionOf, isDoneForToday, parsePercent } from '../progress';
+import { fractionOf, isDoneForToday, overallProgress, parsePercent } from '../progress';
 import type { Item } from '../types';
 
 const TUE = '2026-09-22';
@@ -32,4 +32,10 @@ test('isDoneForToday only for today, one-off, not finished', () => {
   expect(isDoneForToday(task({ doneForDay: TUE }), TUE)).toBe(true);
   expect(isDoneForToday(task({ doneForDay: TUE }), '2026-09-23')).toBe(false);
   expect(isDoneForToday(task({ doneForDay: TUE, done: true }), TUE)).toBe(false);
+});
+
+test('overallProgress counts partial tasks for their share', () => {
+  expect(overallProgress([1, 1, 0, 0.5])).toEqual({ done: 2, total: 4, fraction: 0.625 });
+  expect(overallProgress([])).toEqual({ done: 0, total: 0, fraction: 0 });
+  expect(overallProgress([1, 1])).toEqual({ done: 2, total: 2, fraction: 1 });
 });

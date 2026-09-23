@@ -25,13 +25,14 @@ import { Sidebar } from '@/components/sidebar';
 import { TaskDetail } from '@/components/task-detail';
 import { Dropdown } from '@/components/dropdown';
 import { PlanBoard } from '@/components/plan-board';
+import { ProgressCircle } from '@/components/progress-circle';
 import { ReorderList } from '@/components/reorder-list';
 import { TaskRow } from '@/components/task-row';
 import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { addDaysStr, prettyDate, weekLabel, weekStart } from '@/lib/dates';
 import { movePlanDay, plansOf, plansPatch } from '@/lib/plan';
-import { isDoneForToday } from '@/lib/progress';
+import { fractionOf, isDoneForToday, overallProgress } from '@/lib/progress';
 import { SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
 import {
   isRowDone,
@@ -248,6 +249,11 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
   const rows = rowsFor(view, items, today, completions);
   // "Done for today" tasks sit in the Completed section until tomorrow.
   const finished = (r: Row) => isRowDone(r, completions) || isDoneForToday(r.item, today);
+  // My Day's pie: every task counts, partly done ones for their share.
+  const dayProgress =
+    view === 'myday'
+      ? overallProgress(rows.map((r) => fractionOf(r.item, r.date, isRowDone(r, completions), progress)))
+      : null;
   const open = rows.filter((r) => !finished(r));
   const done = rows.filter(finished);
 
@@ -368,6 +374,17 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
               <Text style={[styles.h1, { color: list?.color ?? c.ink }]} role="heading" aria-level={1}>
                 {title}
               </Text>
+              {dayProgress && dayProgress.total > 0 && (
+                <View
+                  style={styles.dayPie}
+                  role="img"
+                  aria-label={`${Math.round(dayProgress.fraction * 100)}% of today done, ${dayProgress.done} of ${dayProgress.total} tasks complete`}>
+                  <ProgressCircle size={26} fraction={dayProgress.fraction} color={c.accent} ring={c.line} />
+                  <Text style={[styles.dayPieText, { color: c.muted }]} aria-hidden>
+                    {dayProgress.done} of {dayProgress.total} done
+                  </Text>
+                </View>
+              )}
               {list && (
                 <Pressable
                   accessibilityRole="button"
@@ -540,6 +557,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   weekToday: { paddingHorizontal: 10 },
+  dayPie: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dayPieText: { fontSize: 13, fontVariant: ['tabular-nums'] },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   edit: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   h1: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
