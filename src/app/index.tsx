@@ -13,6 +13,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DeleteListDialog } from '@/components/delete-list-dialog';
@@ -114,20 +115,22 @@ function TallyScreen() {
       )}
       {!wide && (
         <Modal visible={!!selected} transparent animationType="slide" onRequestClose={close}>
-          <Pressable style={styles.scrim} onPress={close} accessibilityLabel="Close details" />
-          <SafeAreaView style={[styles.sheet, { backgroundColor: c.side }]} edges={['bottom']}>
-            {selected && <TaskDetail item={selected} onClose={close} />}
-          </SafeAreaView>
+          <View style={styles.sheetWrap}>
+            <Pressable style={styles.scrim} onPress={close} accessibilityLabel="Close details" />
+            <SafeAreaView style={[styles.sheet, { backgroundColor: c.side }]} edges={['bottom']}>
+              {selected && <TaskDetail item={selected} onClose={close} />}
+            </SafeAreaView>
+          </View>
         </Modal>
       )}
       {!wide && (
         <Modal visible={drawer} transparent animationType="fade" onRequestClose={() => setDrawer(false)}>
-          <View style={styles.drawerWrap}>
+          <GestureHandlerRootView style={styles.drawerWrap}>
             <SafeAreaView style={[styles.drawer, { backgroundColor: c.side }]} edges={['top', 'bottom', 'left']}>
               <Sidebar view={current} onSelect={select} onListMenu={openListMenu} onSettings={openSettings} />
             </SafeAreaView>
             <Pressable style={styles.scrim} onPress={() => setDrawer(false)} accessibilityLabel="Close lists" />
-          </View>
+          </GestureHandlerRootView>
         </Modal>
       )}
       <ListMenu
@@ -311,7 +314,9 @@ const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },
   app: { flexDirection: 'row' },
   sideWide: { width: 260 },
-  drawerWrap: { flex: 1, flexDirection: 'row' },
+  // Modal contents use absolute fill: react-native-web's Modal doesn't stretch flex: 1 children.
+  drawerWrap: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, flexDirection: 'row' },
+  sheetWrap: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, justifyContent: 'flex-end' },
   drawer: { width: 280 },
   detailWide: { width: 340, borderLeftWidth: 1 },
   sheet: {

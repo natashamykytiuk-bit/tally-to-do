@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import type { MenuAnchor } from '@/components/list-menu';
 import { usePalette } from '@/constants/tally';
+import { dropIndex, moveIndex } from '@/lib/reorder';
 import { SMART_VIEWS, openCount, type ViewId } from '@/lib/views';
 import { useData } from '@/providers/data';
 
@@ -16,10 +19,32 @@ type Props = {
 
 export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
   const c = usePalette();
-  const { lists, items, today, completions, addList } = useData();
+  const { lists, items, today, completions, addList, reorderLists } = useData();
   const [name, setName] = useState('');
 
-  const nav = (id: ViewId, icon: React.ReactNode, label: string, isList = false) => {
+  // Dragging a list by its handle. `dy` is how far it has moved; other lists shift to make room.
+  const [drag, setDrag] = useState<{ id: string; start: number; dy: number } | null>(null);
+  const dragRef = useRef(drag);
+  dragRef.current = drag;
+  const [stride, setStride] = useState(40); // one row's height + the gap, measured below
+  const ids = lists.map((l) => l.id);
+  const target = drag ? dropIndex(drag.start, drag.dy, stride, ids.length) : 0;
+  const shown = drag ? moveIndex(ids, drag.start, target) : ids;
+
+  const dragGesture = (id: string, index: number) =>
+    Gesture.Pan()
+      .runOnJS(true)
+      .onStart(() => setDrag({ id, start: index, dy: 0 }))
+      .onUpdate((e) => setDrag((d) => d && { ...d, dy: e.translationY }))
+      .onEnd(() => {
+        const d = dragRef.current;
+        if (!d) return;
+        const to = dropIndex(d.start, d.dy, stride, ids.length);
+        if (to !== d.start) reorderLists(moveIndex(ids, d.start, to));
+      })
+      .onFinalize(() => setDrag(null));
+
+  const nav = (id: ViewId, icon: React.ReactNode, label: string, isList = false, handle?: React.ReactNode) => {
     const on = view === id;
     const n = openCount(id, items, today, completions);
     return (
@@ -46,6 +71,7 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
           {label}
         </Text>
         {n > 0 && <Text style={[styles.count, { color: c.muted }]}>{n}</Text>}
+        {handle}
       </Pressable>
     );
   };
@@ -59,13 +85,41 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
 
   return (
     <View style={[styles.side, { backgroundColor: c.side }]}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} scrollEnabled={!drag}>
         <Text style={[styles.brand, { color: c.ink }]}>
           Tally<Text style={{ color: c.accent }}>.</Text>
         </Text>
         {SMART_VIEWS.map((s) => nav(s.id, <Text style={{ color: c.accent }}>{s.icon}</Text>, s.name))}
         <View style={[styles.sep, { backgroundColor: c.line }]} />
-        {lists.map((l) => nav(l.id, <View style={[styles.dot, { backgroundColor: l.color }]} />, l.name, true))}
+        {shown.map((id, i) => {
+          const l = lists.find((x) => x.id === id)!;
+          const dragging = drag?.id === id;
+          const handle = (
+            <GestureDetector gesture={dragGesture(id, ids.indexOf(id))}>
+              <View
+                style={[styles.grip, { cursor: dragging ? 'grabbing' : 'grab' } as object]}
+                accessibilityLabel={`Drag to reorder ${l.name}`}
+                hitSlop={6}>
+                <Ionicons name="reorder-two" size={18} color={c.muted} />
+              </View>
+            </GestureDetector>
+          );
+          return (
+            <View
+              key={id}
+              onLayout={i === 0 ? (e) => setStride(e.nativeEvent.layout.height + 2) : undefined}
+              style={
+                dragging && {
+                  // Follow the pointer, relative to the slot the list currently sits in.
+                  transform: [{ translateY: drag.dy - (target - drag.start) * stride }],
+                  zIndex: 10,
+                  opacity: 0.9,
+                }
+              }>
+              {nav(id, <View style={[styles.dot, { backgroundColor: l.color }]} />, l.name, true, handle)}
+            </View>
+          );
+        })}
       </ScrollView>
       <View style={styles.newList}>
         <TextInput
@@ -103,6 +157,7 @@ const styles = StyleSheet.create({
   label: { flex: 1, fontSize: 15 },
   count: { fontSize: 12, fontVariant: ['tabular-nums'] },
   dot: { width: 10, height: 10, borderRadius: 5 },
+  grip: { paddingHorizontal: 2, marginRight: -4 },
   sep: { height: 1, marginVertical: 10, marginHorizontal: 6 },
   newList: { flexDirection: 'row', gap: 6, paddingTop: 8 },
   input: { flex: 1, minWidth: 0, borderWidth: 1, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 7, fontSize: 14 },

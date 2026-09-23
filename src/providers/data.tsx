@@ -35,6 +35,8 @@ type Data = {
   today: DateStr;
   addList: (name: string) => Promise<string>;
   updateList: (id: string, patch: Partial<Omit<List, 'id'>>) => Promise<void>;
+  /** Saves a new list order (ids top to bottom). */
+  reorderLists: (ids: string[]) => Promise<void>;
   /** Deletes the list, its tasks, and their completions and step progress. */
   deleteList: (id: string) => Promise<void>;
   addItem: (fields: Partial<Item> & { title: string; listId: string }) => Promise<string>;
@@ -116,6 +118,12 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return ref.id;
       },
       updateList: (id, patch) => updateDoc(doc(col('lists'), id), patch),
+      reorderLists: async (ids) => {
+        setLists((cur) => cur && ids.map((id, order) => ({ ...cur.find((l) => l.id === id)!, order }))); // instant
+        const batch = writeBatch(db!);
+        ids.forEach((id, order) => batch.update(doc(col('lists'), id), { order }));
+        await batch.commit();
+      },
       deleteList: async (id) => {
         const batch = writeBatch(db!);
         batch.delete(doc(col('lists'), id));
