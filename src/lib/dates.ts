@@ -16,6 +16,9 @@ export const addDaysStr = (s: DateStr, n: number): DateStr => toLocalDateString(
 export const daysBetween = (a: DateStr, b: DateStr): number =>
   differenceInCalendarDays(parseLocal(b), parseLocal(a));
 
+/** Sunday of the week containing s. */
+export const weekStart = (s: DateStr): DateStr => addDaysStr(s, -dow(s));
+
 /** Day of week, 0=Sun … 6=Sat. */
 export const dow = (s: DateStr): number => parseLocal(s).getDay();
 

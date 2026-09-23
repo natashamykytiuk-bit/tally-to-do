@@ -1,24 +1,39 @@
-import { signOut } from 'firebase/auth';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import type { MenuAnchor } from '@/components/list-menu';
 import { usePalette } from '@/constants/tally';
-import { auth } from '@/lib/firebase';
 import { SMART_VIEWS, openCount, type ViewId } from '@/lib/views';
 import { useData } from '@/providers/data';
 
-export function Sidebar({ view, onSelect }: { view: ViewId; onSelect: (v: ViewId) => void }) {
+type Props = {
+  view: ViewId;
+  onSelect: (v: ViewId) => void;
+  /** Right-click (web) or long-press (phone) on a list. */
+  onListMenu: (listId: string, anchor: MenuAnchor) => void;
+  onSettings: () => void;
+};
+
+export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
   const c = usePalette();
   const { lists, items, today, completions, addList } = useData();
   const [name, setName] = useState('');
 
-  const nav = (id: ViewId, icon: React.ReactNode, label: string) => {
+  const nav = (id: ViewId, icon: React.ReactNode, label: string, isList = false) => {
     const on = view === id;
     const n = openCount(id, items, today, completions);
     return (
       <Pressable
         key={id}
         onPress={() => onSelect(id)}
+        onLongPress={isList ? (e) => onListMenu(id, { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }) : undefined}
+        // react-native-web passes onContextMenu through to the DOM; it isn't in RN's types.
+        {...(isList && {
+          onContextMenu: (e: { preventDefault: () => void; clientX: number; clientY: number }) => {
+            e.preventDefault();
+            onListMenu(id, { x: e.clientX, y: e.clientY });
+          },
+        })}
         accessibilityRole="button"
         accessibilityState={{ selected: on }}
         style={({ hovered }) => [
@@ -50,7 +65,7 @@ export function Sidebar({ view, onSelect }: { view: ViewId; onSelect: (v: ViewId
         </Text>
         {SMART_VIEWS.map((s) => nav(s.id, <Text style={{ color: c.accent }}>{s.icon}</Text>, s.name))}
         <View style={[styles.sep, { backgroundColor: c.line }]} />
-        {lists.map((l) => nav(l.id, <View style={[styles.dot, { backgroundColor: l.color }]} />, l.name))}
+        {lists.map((l) => nav(l.id, <View style={[styles.dot, { backgroundColor: l.color }]} />, l.name, true))}
       </ScrollView>
       <View style={styles.newList}>
         <TextInput
@@ -65,8 +80,14 @@ export function Sidebar({ view, onSelect }: { view: ViewId; onSelect: (v: ViewId
           <Text style={{ color: c.accent, fontWeight: '700' }}>+</Text>
         </Pressable>
       </View>
-      <Pressable onPress={() => auth && signOut(auth)} style={styles.signOut}>
-        <Text style={{ color: c.muted, fontSize: 13 }}>Sign out</Text>
+      <Pressable
+        onPress={onSettings}
+        accessibilityRole="button"
+        style={({ hovered }) => [styles.nav, styles.settings, hovered && { backgroundColor: c.line }]}>
+        <View style={styles.ico}>
+          <Text style={{ color: c.muted }}>⚙</Text>
+        </View>
+        <Text style={[styles.label, { color: c.ink }]}>Settings</Text>
       </Pressable>
     </View>
   );
@@ -86,5 +107,5 @@ const styles = StyleSheet.create({
   newList: { flexDirection: 'row', gap: 6, paddingTop: 8 },
   input: { flex: 1, minWidth: 0, borderWidth: 1, borderRadius: 8, paddingHorizontal: 9, paddingVertical: 7, fontSize: 14 },
   plus: { borderRadius: 8, paddingHorizontal: 14, justifyContent: 'center' },
-  signOut: { paddingTop: 12, paddingHorizontal: 6 },
+  settings: { marginTop: 8 },
 });

@@ -1,5 +1,7 @@
 import { useColorScheme } from 'react-native';
 
+import { usePrefs } from '@/providers/prefs';
+
 const light = {
   bg: '#F3F5F9',
   side: '#E8ECF3',
@@ -32,7 +34,21 @@ const dark: typeof light = {
 
 export type Palette = typeof light;
 
-export const usePalette = (): Palette => (useColorScheme() === 'dark' ? dark : light);
+/** Whether the app is currently dark, after applying the user's theme choice. */
+export function useIsDark(): boolean {
+  const system = useColorScheme();
+  const { theme } = usePrefs().prefs;
+  return theme === 'system' ? system === 'dark' : theme === 'dark';
+}
+
+/** The current colours: light or dark, with the user's accent colour if they picked one. */
+export function usePalette(): Palette {
+  const isDark = useIsDark();
+  const { accent } = usePrefs().prefs;
+  const base = isDark ? dark : light;
+  // A soft tint of the accent for chips and selected states (hex + alpha).
+  return accent ? { ...base, accent, accentSoft: accent + (isDark ? '38' : '24') } : base;
+}
 
 /** Sidebar is permanent at or above this width, a drawer below it. */
 export const WIDE_BREAKPOINT = 860;

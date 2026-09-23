@@ -55,6 +55,15 @@ describe('occursOn', () => {
     const it = make({ type: 'weekly', days: [1, 3, 5] });
     expect(occurrences(it, MON, 7)).toEqual(['2026-09-21', '2026-09-23', '2026-09-25']);
   });
+  test('every 2 weeks on Mon/Thu counts calendar weeks from the start week', () => {
+    // Start Wed Sep 23: that week's Thu counts, the next week is skipped.
+    const it = make({ type: 'weekly', days: [1, 4], interval: 2 }, { startDate: '2026-09-23' });
+    expect(occurrences(it, '2026-09-20', 21)).toEqual(['2026-09-24', '2026-10-05', '2026-10-08']);
+  });
+  test('every 3 weeks', () => {
+    const it = make({ type: 'weekly', days: [0], interval: 3 }, { startDate: '2026-09-06' });
+    expect(occurrences(it, '2026-09-06', 50)).toEqual(['2026-09-06', '2026-09-27', '2026-10-18']);
+  });
   test('everyN counts from startDate', () => {
     const it = make({ type: 'everyN', interval: 3 }, { startDate: '2026-09-13' });
     expect(occurrences(it, '2026-09-10', 12)).toEqual(['2026-09-13', '2026-09-16', '2026-09-19']);
@@ -72,6 +81,11 @@ describe('occursOn', () => {
     expect(occursOn(it, '2026-02-28')).toBe(true);
     expect(occursOn(make({ type: 'monthly', dom: 31 }, { startDate: '2028-01-01' }), '2028-02-29')).toBe(true);
     expect(occursOn(make({ type: 'monthly', dom: 31 }, { startDate: '2028-01-01' }), '2028-02-28')).toBe(false);
+  });
+  test('every 2 months on the 31st, clamped', () => {
+    const it = make({ type: 'monthly', dom: 31, interval: 2 }, { startDate: '2026-08-01' });
+    const all = occurrences(it, '2026-08-01', 220);
+    expect(all).toEqual(['2026-08-31', '2026-10-31', '2026-12-31', '2027-02-28']);
   });
   test('respects startDate and endDate', () => {
     const it = make({ type: 'daily' }, { startDate: TUE, endDate: '2026-09-24' });
@@ -151,5 +165,9 @@ describe('helpers', () => {
     expect(ruleText({ type: 'weekly', days: [5, 1, 3] })).toBe('Mon, Wed, Fri');
     expect(ruleText({ type: 'everyN', interval: 3 })).toBe('Every 3 days');
     expect(ruleText(null)).toBe('');
+    expect(ruleText({ type: 'weekly', days: [1, 4], interval: 2 })).toBe('Every 2 weeks on Mon, Thu');
+    expect(ruleText({ type: 'everyN', interval: 1 })).toBe('Daily');
+    expect(ruleText({ type: 'monthly', dom: 22, interval: 3 })).toBe('Every 3 months on the 22nd');
+    expect(ruleText({ type: 'monthly', dom: 1 })).toBe('Monthly on the 1st');
   });
 });

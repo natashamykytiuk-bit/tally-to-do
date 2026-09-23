@@ -1,29 +1,37 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { useIsDark } from '@/constants/tally';
 import { AuthProvider, useAuth } from '@/providers/auth';
+import { PrefsProvider } from '@/providers/prefs';
 
 SplashScreen.preventAutoHideAsync();
 
 function RootStack() {
   const { loading } = useAuth();
+  const isDark = useIsDark();
   useEffect(() => {
     if (!loading) SplashScreen.hideAsync();
   }, [loading]);
   if (loading) return null;
   // Each screen redirects itself based on auth state (see index.tsx and sign-in.tsx).
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <ThemeProvider value={isDark ? DarkTheme : DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }} />
+    </ThemeProvider>
+  );
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
-        <RootStack />
+        <PrefsProvider>
+          <RootStack />
+        </PrefsProvider>
       </AuthProvider>
-    </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

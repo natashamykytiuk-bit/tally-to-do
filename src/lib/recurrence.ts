@@ -1,4 +1,4 @@
-import { addDaysStr, dayOfMonth, daysBetween, dow, lastDayOfMonth } from './dates';
+import { addDaysStr, dayOfMonth, daysBetween, dow, lastDayOfMonth, prettyDate, weekStart } from './dates';
 import type { CompletionKind, CompletionMap, DateStr, Item, Rule } from './types';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -17,14 +17,23 @@ export function occursOn(item: Item, date: DateStr): boolean {
       const d = dow(date);
       return d > 0 && d < 6;
     }
-    case 'weekly':
-      return r.days.includes(dow(date));
+    case 'weekly': {
+      if (!r.days.includes(dow(date))) return false;
+      // Every N weeks, counted in calendar weeks (Sun–Sat) from the start date's week.
+      const weeks = daysBetween(weekStart(item.startDate), weekStart(date)) / 7;
+      return weeks % Math.max(1, r.interval ?? 1) === 0;
+    }
     case 'everyN':
       return daysBetween(item.startDate, date) % Math.max(1, r.interval) === 0;
-    case 'monthly':
-      return dayOfMonth(date) === Math.min(r.dom, lastDayOfMonth(date));
+    case 'monthly': {
+      if (dayOfMonth(date) !== Math.min(r.dom, lastDayOfMonth(date))) return false;
+      const months = monthIndex(date) - monthIndex(item.startDate);
+      return months % Math.max(1, r.interval ?? 1) === 0;
+    }
   }
 }
+
+const monthIndex = (s: DateStr) => Number(s.slice(0, 4)) * 12 + Number(s.slice(5, 7));
 
 /**
  * For 'carry' items: the oldest scheduled-but-undone date before today,
@@ -68,11 +77,26 @@ export function ruleText(r: Rule | null | undefined): string {
       return 'Daily';
     case 'weekdays':
       return 'Weekdays';
-    case 'weekly':
-      return r.days.length ? [...r.days].sort().map((d) => DOW[d]).join(', ') : 'Weekly';
+    case 'weekly': {
+      const n = r.interval ?? 1;
+      const days = [...r.days].sort().map((d) => DOW[d]).join(', ');
+      const every = n === 1 ? 'Weekly' : `Every ${n} weeks`;
+      return days ? (n === 1 ? days : `${every} on ${days}`) : every;
+    }
     case 'everyN':
-      return `Every ${r.interval} days`;
-    case 'monthly':
-      return `Monthly on the ${r.dom}`;
+      return r.interval === 1 ? 'Daily' : `Every ${r.interval} days`;
+    case 'monthly': {
+      const n = r.interval ?? 1;
+      return `${n === 1 ? 'Monthly' : `Every ${n} months`} on the ${ordinal(r.dom)}`;
+    }
   }
 }
+
+/** Rule text plus the end date, e.g. "Mon, Wed · until Fri, Dec 4". */
+export const scheduleText = (item: Item): string =>
+  item.rule ? ruleText(item.rule) + (item.endDate ? ` · until ${prettyDate(item.endDate)}` : '') : '';
+
+const ordinal = (n: number) => {
+  const s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
