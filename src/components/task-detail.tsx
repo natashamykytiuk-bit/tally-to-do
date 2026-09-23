@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
 import { DateField } from '@/components/date-field';
+import { PlanDaysField } from '@/components/plan-days-field';
 import { RepeatEditor } from '@/components/repeat-editor';
 import { StepsEditor } from '@/components/steps-editor';
 import { usePalette } from '@/constants/tally';
@@ -121,11 +122,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
                 </Pressable>
               </View>
             ))}
-            <DateField
-              key={plansOf(item).join()}
-              onChange={(d) => set(plansPatch(togglePlanDay(plansOf(item), d)))}
-              placeholder={plansOf(item).length ? 'Add a day' : 'Plan a day'}
-            />
+            <PlanDaysField days={plansOf(item)} onChange={(days) => set(plansPatch(days))} />
           </View>
           <Text style={[styles.hint, { color: c.muted }]}>
             {plansOf(item).length

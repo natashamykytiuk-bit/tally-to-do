@@ -1,7 +1,7 @@
 import type { Item } from './types';
 
 /** Where the app should be while a step is showing. 'list' means the user's first list. */
-export type TourView = 'myday' | 'planned' | 'habits' | 'list';
+export type TourView = 'myday' | 'plan' | 'planned' | 'habits' | 'list';
 
 export type TourStep = { icon: string; title: string; body: string; view?: TourView };
 
@@ -20,14 +20,20 @@ export const TOUR: TourStep[] = [
   {
     icon: '📚',
     title: 'Lists',
-    body: 'Make a list for each class or project in the sidebar. Drag ≡ to reorder, and right-click a list (long-press on a phone) to rename it, recolour it or delete it.',
+    body: 'Make a list for each class or project in the sidebar. Drag ≡ to reorder, and right-click a list (long-press on a phone) to rename it, recolour it or delete it. Tasks you add outside a list collect under No list.',
     view: 'list',
   },
   {
     icon: '✏️',
     title: 'Tasks',
-    body: 'Type in the box at the top and press Enter to add a task. Click a title to rename it, 📅 to set a due date, ☀ to add it to My Day, and × to delete it. Click anywhere else on a task for details, notes and steps.',
+    body: 'Type in the box at the top and press Enter to add a task. Click a title to rename it, 🕒 to plan days to work on it, 📅 to set a due date, ☀ to add it to My Day, and × to delete it. Click anywhere else on a task for details, notes and steps.',
     view: 'list',
+  },
+  {
+    icon: '✎',
+    title: 'Plan',
+    body: 'Plan when you’ll work on things before they’re due. Tap 🕒 on a task and pick one or more days, or add tasks straight onto a day here. Drag ≡ to move a task to another day. Tasks due soon that aren’t planned yet wait at the top.',
+    view: 'plan',
   },
   {
     icon: '↻',

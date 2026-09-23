@@ -246,7 +246,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       return (
         <View key={g} style={styles.gap}>
           <Text style={[styles.group, { color: c.muted }]}>{g.toUpperCase()}</Text>
-          {rs.map(renderRow)}
+          {rs.map((r) => renderRow(r))}
         </View>
       );
     });
@@ -263,7 +263,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
         onDragging={setDragging}
       />
     );
-  } else body = open.map(renderRow);
+  } else body = open.map((r) => renderRow(r));
 
   const add = async () => {
     const t = draft.trim();
@@ -354,7 +354,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
                   {showDone ? '▾' : '▸'} COMPLETED {done.length}
                 </Text>
               </Pressable>
-              {showDone && done.map(renderRow)}
+              {showDone && done.map((r) => renderRow(r))}
             </>
           )}
         </ScrollView>
