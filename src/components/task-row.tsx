@@ -4,10 +4,13 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { DueButton, PlanButton } from '@/components/due-button';
+import { ProgressCircle } from '@/components/progress-circle';
+import { ProgressMenu, type PointAnchor } from '@/components/progress-menu';
 import { usePalette } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
 import { planLabel, plansOf } from '@/lib/plan';
+import { fractionOf, isDoneForToday } from '@/lib/progress';
 import { isStepDone, stepCount, type AllProgress } from '@/lib/steps';
 import type { DateStr, List } from '@/lib/types';
 import type { AllCompletions, Row } from '@/lib/views';
@@ -28,13 +31,17 @@ type Props = {
   onPlan: (days: DateStr[]) => void;
   onDelete: () => void;
   onRename: (title: string) => void;
+  /** Manual partial progress (1–99), or undefined to clear. */
+  onProgress: (pct: number | undefined) => void;
   onToggleStep: (stepId: string) => void;
   /** Drag grip shown before the checkbox (Plan view). */
   handle?: React.ReactNode;
 };
 
 export function TaskRow(props: Props) {
-  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onToggleStep, handle } = props;
+  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onProgress, onToggleStep, handle } = props;
+  const [menu, setMenu] = useState<PointAnchor | null>(null);
+  const openMenu = (x: number, y: number) => setMenu({ x, y });
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(props.row.item.title);
   // Escape unmounts the input, which fires onBlur; this stops that blur from saving.
@@ -42,6 +49,8 @@ export function TaskRow(props: Props) {
   const c = usePalette();
   const { item } = row;
   const disabled = !!item.rule && !row.date;
+  const fraction = fractionOf(item, row.date, done, progress);
+  const restingToday = isDoneForToday(item, today);
   const st = item.rule ? streak(item, today, completions[item.id] ?? {}) : 0;
 
   const save = () => {
@@ -60,6 +69,8 @@ export function TaskRow(props: Props) {
   const inMyDay = item.myDay === today;
   const steps = item.steps ?? [];
   const sc = stepCount(item, row.date, progress);
+  if (restingToday) meta.push({ text: 'Done for today' });
+  if (!done && fraction > 0 && fraction < 1) meta.push({ text: `${Math.round(fraction * 100)}%` });
   if (list) meta.push({ text: list.name });
   if (steps.length) meta.push({ text: `${sc.done} of ${sc.total}` });
   if (row.late && row.date) meta.push({ text: `Missed ${prettyDate(row.date)}`, warn: true });
@@ -86,16 +97,22 @@ export function TaskRow(props: Props) {
       <Pressable
         onPress={onToggle}
         disabled={disabled}
+        // Right-click (web) or long-press (phone) on a one-off task's circle: mark it partly done.
+        onLongPress={item.rule ? undefined : (e) => openMenu(e.nativeEvent.pageX, e.nativeEvent.pageY)}
+        {...(!item.rule && {
+          onContextMenu: (e: { preventDefault: () => void; clientX: number; clientY: number }) => {
+            e.preventDefault();
+            openMenu(e.clientX, e.clientY);
+          },
+        })}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: done, disabled }}
+        accessibilityValue={fraction > 0 && fraction < 1 ? { text: `${Math.round(fraction * 100)}% done` } : undefined}
         hitSlop={8}
-        style={[
-          styles.chk,
-          { borderColor: done ? c.accent : c.muted, backgroundColor: done ? c.accent : 'transparent' },
-          disabled && { opacity: 0.35 },
-        ]}>
-        {done && <Text style={styles.tick}>✓</Text>}
+        style={[styles.chk, disabled && { opacity: 0.35 }]}>
+        <ProgressCircle size={22} fraction={fraction} color={c.accent} ring={c.muted} />
       </Pressable>
+      <ProgressMenu anchor={menu} current={item.progress} onPick={onProgress} onClose={() => setMenu(null)} />
       <View style={styles.body}>
         {editing ? (
           <TextInput
@@ -200,8 +217,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
-  chk: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  tick: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  chk: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, minWidth: 0 },
   title: { fontSize: 15 },
   // Only the text itself is the edit target; the rest of the row still opens details.

@@ -33,6 +33,10 @@ export type Item = {
   /** Older single work day; still read by plansOf(), cleared on the next change. */
   plan?: DateStr;
   done?: boolean;
+  /** Manual partial progress, 1–99 (one-off only). */
+  progress?: number;
+  /** Set aside with "Done for today" on this date (one-off only). */
+  doneForDay?: DateStr;
   completedAt?: Timestamp;
   // recurring only
   rule?: Rule | null;

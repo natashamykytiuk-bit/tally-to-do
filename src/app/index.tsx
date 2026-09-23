@@ -28,6 +28,7 @@ import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { movePlanDay, plansOf, plansPatch } from '@/lib/plan';
+import { isDoneForToday } from '@/lib/progress';
 import {
   isRowDone,
   isSmartView,
@@ -209,8 +210,10 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
           : '';
 
   const rows = rowsFor(view, items, today, completions);
-  const open = rows.filter((r) => !isRowDone(r, completions));
-  const done = rows.filter((r) => isRowDone(r, completions));
+  // "Done for today" tasks sit in the Completed section until tomorrow.
+  const finished = (r: Row) => isRowDone(r, completions) || isDoneForToday(r.item, today);
+  const open = rows.filter((r) => !finished(r));
+  const done = rows.filter(finished);
 
   const renderRow = (r: Row, handle?: React.ReactNode) => (
     <TaskRow
@@ -229,6 +232,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       onPlan={(days) => updateItem(r.item.id, plansPatch(days))}
       handle={handle}
       onRename={(title) => updateItem(r.item.id, { title })}
+      onProgress={(progress) => updateItem(r.item.id, { progress })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
       onDelete={() => {
         if (selId === r.item.id) onOpen(r.item.id); // close its detail panel first

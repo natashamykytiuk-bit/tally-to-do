@@ -1,5 +1,6 @@
 import { addDaysStr } from './dates';
 import { planOverdue, plannedToday, plansOf } from './plan';
+import { isDoneForToday } from './progress';
 import { occursOn, pendingMissed } from './recurrence';
 import type { CompletionMap, DateStr, Item } from './types';
 
@@ -75,7 +76,9 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
 }
 
 export const openCount = (view: ViewId, items: Item[], today: DateStr, all: AllCompletions) =>
-  rowsFor(view, items, today, all).filter((r) => !isRowDone(r, all) && !(r.item.rule && !r.date)).length;
+  rowsFor(view, items, today, all).filter(
+    (r) => !isRowDone(r, all) && !isDoneForToday(r.item, today) && !(r.item.rule && !r.date),
+  ).length;
 
 export type PlannedGroup = 'Overdue' | 'Today' | 'Tomorrow' | 'Later';
 

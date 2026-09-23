@@ -30,6 +30,12 @@ export const TOUR: TourStep[] = [
     view: 'list',
   },
   {
+    icon: '◔',
+    title: 'Partly done',
+    body: 'Right-click a task’s circle (long-press on a phone) to mark it 25%, 50%, 75% or any percent done; the circle fills to match. Worked on something enough for one day? Open it and choose Done for today to set it aside until tomorrow.',
+    view: 'list',
+  },
+  {
     icon: '✎',
     title: 'Plan',
     body: 'Plan when you’ll work on things before they’re due. Tap 🕒 on a task and pick one or more days, or add tasks straight onto a day here. Drag ≡ to move a task to another day. Tasks due soon that aren’t planned yet wait at the top.',

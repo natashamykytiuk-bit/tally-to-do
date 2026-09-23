@@ -8,6 +8,7 @@ import { StepsEditor } from '@/components/steps-editor';
 import { usePalette } from '@/constants/tally';
 import { addDaysStr, dow, prettyDate } from '@/lib/dates';
 import { plansOf, plansPatch, togglePlanDay } from '@/lib/plan';
+import { isDoneForToday } from '@/lib/progress';
 import type { Item } from '@/lib/types';
 import { useData } from '@/providers/data';
 
@@ -23,6 +24,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
   }, [item.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = (patch: Partial<Item>) => updateItem(item.id, patch);
+  const restingToday = isDoneForToday(item, today);
   const saveTitle = () => {
     const t = title.trim();
     if (t && t !== item.title) set({ title: t });
@@ -74,6 +76,27 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           ))}
         </View>
       </View>
+
+      {!item.rule && !item.done && (
+        <View style={card}>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: c.ink, fontSize: 15 }}>{restingToday ? '✓ Done for today' : 'Done for today'}</Text>
+              <Text style={[styles.hint, { color: c.muted }]}>
+                {restingToday
+                  ? 'Set aside until tomorrow. It comes back on its next work day or while it’s due.'
+                  : 'Worked on it enough today? Set it aside until tomorrow without finishing it.'}
+                {item.progress ? ` Progress: ${item.progress}%.` : ''}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => set({ doneForDay: restingToday ? undefined : today })}
+              style={[styles.btn, { backgroundColor: restingToday ? c.accentSoft : c.accent }]}>
+              <Text style={{ color: restingToday ? c.accent : '#fff', fontWeight: '600' }}>{restingToday ? 'Undo' : 'Done for today'}</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
 
       {!item.rule && (
         <View style={card}>
