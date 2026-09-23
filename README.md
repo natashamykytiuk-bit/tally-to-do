@@ -6,24 +6,38 @@ A to-do list and habit tracker in the style of Microsoft To Do. Put one-off task
 
 ## Features
 
-- **Smart views:**
-  - **Plan:** choose one or more days to work on each task, and drag tasks between days.
-  - **My Day:** today's tasks, habits due today and any carried-over misses.
-  - **Scheduled:** tasks with due dates, grouped Overdue, Today, Tomorrow, Later this week, Next week and Later.
-  - **Tasks:** everything that isn't in one of your lists (tasks added from My Day, Plan, Scheduled or Habits).
-  - **Habits:** every recurring task, with its streak.
-- **Lists:** each list or class has its own colour, chosen from presets, a hex code or a colour wheel. Drag the ≡ handle to reorder lists. Right-click a list (long-press on a phone) to edit or delete it.
-- **Tasks:**
-  - Click the title to rename.
-  - 📅 sets a due date and ☀ adds the task to My Day.
-  - × deletes the task.
-  - Steps turn a task into a checklist; ticking the last step completes the task.
-- **Repeats:** every N days, weeks (on chosen weekdays) or months (on a day of the month), with optional start and end dates.
+- **My Day:** today's tasks, anything due or planned for today, today's habits and any carried-over misses.
+  - A progress pie next to the title fills as you finish, e.g. "3 of 5 done".
+  - Drag tasks into your own order, or sort by due date, date created or A to Z.
+- **Plan:** a Sunday–Saturday week, with days side by side as columns on a computer and stacked as rows on a phone.
+  - Pick one or more days to work on each task with 🕒, or add tasks straight onto a day.
+  - Drag a task from one day to another.
+  - ‹ and › move between weeks, and **This week** jumps back.
+  - Tasks due soon that aren't planned yet wait at the top.
+- **Scheduled:** tasks with due dates, grouped into Overdue, Today, Tomorrow, Later this week, Next week and Later.
+- **Tasks:** everything that isn't in one of your lists, such as tasks added from My Day, Plan, Scheduled or Habits.
+- **Habits:** every repeating task, with its streak.
+- **Lists:** one per class or project.
+  - Each list has its own colour, from presets, a hex code or a colour wheel.
+  - Drag lists to reorder them.
+  - Right-click a list (long-press on a phone), or use **Edit** at the top of it, to rename, recolour or delete it. Deleting a list deletes its tasks, after a warning.
+- **Working with tasks:**
+  - Tick the circle to finish a task. It pops and bursts into confetti, unless your device is set to reduce motion.
+  - Click a title to rename it. Click anywhere else on a task to open its details: steps, notes, list, dates, repeat and Delete.
+  - 🕒 plans the days to work on a task, 📅 sets its due date and ☀ adds it to My Day.
+  - **Partly done:** right-click the circle (long-press on a phone) to mark a task 25%, 50%, 75% or any percent done, and the circle fills to match. Steps fill it too.
+  - **Done for today:** in a task's details, this sets the task aside until tomorrow without finishing it.
+- **Repeats:** every N days, weeks (on the days you pick) or months (on a day of the month), with optional start and end dates.
   - **If I miss it:** *Carry over* keeps a missed day in My Day, marked late, until it's done. *Let it go* drops it and resets the streak.
   - **Streaks:** 🔥 counts consecutive on-time check-offs. Late ones don't count.
 - **Settings:**
   - Light, dark or system theme, and an accent colour.
-  - Change password, sign out, or delete the account along with all its data.
+  - Import tasks from an Excel or CSV file, sorted into lists by a Class or List column.
+  - Replay the tutorial.
+  - Change your password, sign out, or delete the account along with all its data.
+- **On a computer,** the ‹ next to "Tally" hides the sidebar so tasks get the full width. ☰ brings it back.
+- **New accounts** get a short guided tour.
+- **Accessibility:** every control has a screen-reader label, and headings, dialogs and states (done, partly done, selected) are announced.
 
 ## Tech
 

@@ -17,6 +17,7 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ConfettiProvider } from '@/components/confetti';
 import { DeleteListDialog } from '@/components/delete-list-dialog';
 import { ListMenu, type MenuAnchor } from '@/components/list-menu';
 import { ListSettings } from '@/components/list-settings';
@@ -55,7 +56,9 @@ export default function Home() {
   if (!user) return <Redirect href="/sign-in" />;
   return (
     <DataProvider>
-      <TallyScreen />
+      <ConfettiProvider>
+        <TallyScreen />
+      </ConfettiProvider>
     </DataProvider>
   );
 }

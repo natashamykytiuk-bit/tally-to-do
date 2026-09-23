@@ -14,19 +14,19 @@ export const TOUR: TourStep[] = [
   {
     icon: '✏️',
     title: 'Adding and editing tasks',
-    body: 'Type in the box at the top and press Enter. Click a task’s title to rename it, or anywhere else on it to open its details: steps, notes, its list, dates and more. Delete is at the bottom of the details.',
+    body: 'Type in the box at the top and press Enter. Tick the circle when you finish something (enjoy the confetti!). Click a task’s title to rename it, or anywhere else on it to open its details: steps, notes, its list, dates and more. Delete is at the bottom of the details.',
     view: 'nolist',
   },
   {
     icon: '☀',
     title: 'My Day',
-    body: 'Everything for today: tasks you’ve added with ☀, anything due or planned for today, and today’s habits. Drag tasks up and down to put them in your own order, or use Sort for due date, date created or A to Z.',
+    body: 'Everything for today: tasks you’ve added with ☀, anything due or planned for today, and today’s habits. The pie next to the title fills as you finish them. Drag tasks up and down to put them in your own order, or use Sort for due date, date created or A to Z.',
     view: 'myday',
   },
   {
     icon: '✎',
     title: 'Plan',
-    body: 'Decide when you’ll work on things before they’re due. Tap 🕒 on a task to pick one or more days, or add tasks straight onto a day. Drag a task to move it to another day. Tasks due soon that aren’t planned yet wait at the top.',
+    body: 'Decide when you’ll work on things before they’re due. The week runs Sunday to Saturday; use ‹ and › at the top right to look ahead. Tap 🕒 on a task to pick one or more days, or add tasks straight onto a day. Drag a task to move it to another day. Tasks due soon that aren’t planned yet wait at the top.',
     view: 'plan',
   },
   {
@@ -56,7 +56,7 @@ export const TOUR: TourStep[] = [
   {
     icon: '⚙',
     title: 'Settings',
-    body: 'At the bottom of the sidebar: light or dark mode and your accent colour, importing tasks from an Excel or CSV file, your account, and this tutorial if you want to see it again.',
+    body: 'At the bottom of the sidebar: light or dark mode and your accent colour, importing tasks from an Excel or CSV file, your account, and this tutorial if you want to see it again. On a computer, ‹ next to “Tally” hides the sidebar for more room; ☰ brings it back.',
   },
 ];
 

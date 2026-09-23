@@ -1,9 +1,19 @@
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Animated,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  type GestureResponderEvent,
+} from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { DueButton, PlanButton } from '@/components/due-button';
+import { useConfetti } from '@/components/confetti';
 import { ProgressCircle } from '@/components/progress-circle';
 import { ProgressMenu, type PointAnchor } from '@/components/progress-menu';
 import { usePalette } from '@/constants/tally';
@@ -59,6 +69,23 @@ export function TaskRow(props: Props) {
   } = props;
   const [menu, setMenu] = useState<PointAnchor | null>(null);
   const openMenu = (x: number, y: number) => setMenu({ x, y });
+
+  // Completing a task: the circle pops and confetti bursts out of it. Unchecking stays quiet.
+  const confetti = useConfetti();
+  const circleRef = useRef<View>(null);
+  const pop = useRef(new Animated.Value(1)).current;
+  const complete = (e?: GestureResponderEvent) => {
+    if (!props.done) {
+      // Burst from where the click/tap landed. Measuring the circle afterwards would be too late: the task
+      // immediately moves to the Completed section. Keyboard presses have no position, so measure then.
+      const { pageX, pageY } = e?.nativeEvent ?? {};
+      if (pageX || pageY) confetti(pageX!, pageY!);
+      else circleRef.current?.measureInWindow((x, y, w, h) => confetti(x + w / 2, y + h / 2));
+      pop.setValue(0.7);
+      Animated.spring(pop, { toValue: 1, friction: 3, tension: 180, useNativeDriver: Platform.OS !== 'web' }).start();
+    }
+    onToggle();
+  };
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(props.row.item.title);
   // Escape unmounts the input, which fires onBlur; this stops that blur from saving.
@@ -126,7 +153,8 @@ export function TaskRow(props: Props) {
         },
       ]}>
       <Pressable
-        onPress={onToggle}
+        ref={circleRef}
+        onPress={complete}
         disabled={disabled}
         // Right-click (web) or long-press (phone) on a one-off task's circle: mark it partly done.
         onLongPress={item.rule ? undefined : (e) => openMenu(e.nativeEvent.pageX, e.nativeEvent.pageY)}
@@ -143,7 +171,9 @@ export function TaskRow(props: Props) {
         accessibilityValue={fraction > 0 && fraction < 1 ? { text: `${Math.round(fraction * 100)}% done` } : undefined}
         hitSlop={8}
         style={[styles.chk, disabled && { opacity: 0.35 }]}>
-        <ProgressCircle size={22} fraction={fraction} color={c.accent} ring={c.muted} />
+        <Animated.View style={{ transform: [{ scale: pop }] }}>
+          <ProgressCircle size={22} fraction={fraction} color={c.accent} ring={c.muted} />
+        </Animated.View>
       </Pressable>
       <ProgressMenu anchor={menu} current={item.progress} onPick={onProgress} onClose={() => setMenu(null)} />
       <View style={styles.body}>
