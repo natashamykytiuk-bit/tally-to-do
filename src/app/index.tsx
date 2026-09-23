@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -23,6 +23,7 @@ import { Settings } from '@/components/settings';
 import { Sidebar } from '@/components/sidebar';
 import { TaskDetail } from '@/components/task-detail';
 import { TaskRow } from '@/components/task-row';
+import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import {
@@ -35,8 +36,10 @@ import {
   type Row,
   type ViewId,
 } from '@/lib/views';
+import { shouldShowTour, TOUR } from '@/lib/tour';
 import { useAuth } from '@/providers/auth';
 import { DataProvider, useData } from '@/providers/data';
+import { usePrefs } from '@/providers/prefs';
 
 export default function Home() {
   const { user } = useAuth();
@@ -59,6 +62,26 @@ function TallyScreen() {
   const [deleteListId, setDeleteListId] = useState<string | null>(null);
   const [menu, setMenu] = useState<{ listId: string; anchor: MenuAnchor } | null>(null);
   const [settings, setSettings] = useState(false);
+
+  // Intro tour: offered once to new accounts, replayable from Settings.
+  const { prefs, loaded: prefsLoaded, setPrefs } = usePrefs();
+  const [tourStep, setTourStep] = useState<number | null>(null);
+  const [tourChecked, setTourChecked] = useState(false);
+  useEffect(() => {
+    if (tourChecked || !data.ready || !prefsLoaded) return;
+    setTourChecked(true);
+    if (shouldShowTour(prefs.tourDone, data.items)) setTourStep(0);
+  }, [tourChecked, data.ready, prefsLoaded, prefs.tourDone, data.items]);
+  const goToTourStep = (i: number) => {
+    setTourStep(i);
+    setSelId(null);
+    const v = TOUR[i].view;
+    if (v) setView(v === 'list' ? (data.lists[0]?.id ?? 'myday') : v);
+  };
+  const endTour = () => {
+    setTourStep(null);
+    setPrefs({ tourDone: true });
+  };
 
   if (!data.ready) {
     return (
@@ -140,7 +163,8 @@ function TallyScreen() {
         onDelete={() => menu && setDeleteListId(menu.listId)}
       />
       <ListSettings list={listById(editListId)} onClose={() => setEditListId(null)} onDelete={(l) => setDeleteListId(l.id)} />
-      <Settings open={settings} onClose={() => setSettings(false)} />
+      <Settings open={settings} onClose={() => setSettings(false)} onReplayTour={() => goToTourStep(0)} />
+      {tourStep !== null && <Tour step={tourStep} onStep={goToTourStep} onDone={endTour} />}
       <DeleteListDialog
         list={deleting}
         taskCount={deleting ? data.items.filter((i) => i.listId === deleting.id).length : 0}

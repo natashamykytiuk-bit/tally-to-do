@@ -13,7 +13,7 @@ import { usePrefs, type ThemeMode } from '@/providers/prefs';
 type Panel = 'main' | 'password' | 'delete';
 
 /** Account management and appearance. Opened from the bottom of the sidebar. */
-export function Settings({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClose: () => void; onReplayTour: () => void }) {
   const c = usePalette();
   const [panel, setPanel] = useState<Panel>('main');
   const close = () => {
@@ -28,7 +28,16 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
         <Pressable style={styles.scrim} onPress={close} accessibilityLabel="Close settings" />
         <View style={[styles.card, { backgroundColor: c.panel }]}>
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-            {panel === 'main' && <Main onPanel={setPanel} onClose={close} />}
+            {panel === 'main' && (
+              <Main
+                onPanel={setPanel}
+                onClose={close}
+                onReplayTour={() => {
+                  close();
+                  onReplayTour();
+                }}
+              />
+            )}
             {panel === 'password' && <PasswordForm onBack={() => setPanel('main')} />}
             {panel === 'delete' && <DeleteForm onBack={() => setPanel('main')} />}
           </ScrollView>
@@ -38,7 +47,7 @@ export function Settings({ open, onClose }: { open: boolean; onClose: () => void
   );
 }
 
-function Main({ onPanel, onClose }: { onPanel: (p: Panel) => void; onClose: () => void }) {
+function Main({ onPanel, onClose, onReplayTour }: { onPanel: (p: Panel) => void; onClose: () => void; onReplayTour: () => void }) {
   const c = usePalette();
   const { user } = useAuth();
   const { prefs, setPrefs } = usePrefs();
@@ -87,6 +96,11 @@ function Main({ onPanel, onClose }: { onPanel: (p: Panel) => void; onClose: () =
           )}
         </View>
         <ColorField value={c.accent} onChange={(accent) => setPrefs({ accent })} />
+      </Section>
+
+      <Section title="Help">
+        <Text style={{ color: c.muted, fontSize: 13 }}>A one-minute walk through Tally’s features.</Text>
+        <Btn label="Show tutorial" onPress={onReplayTour} />
       </Section>
 
       <Section title="Danger zone">
