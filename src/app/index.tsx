@@ -72,6 +72,8 @@ function TallyScreen() {
 
   // Intro tour: offered once to new accounts, replayable from Settings.
   const { prefs, loaded: prefsLoaded, setPrefs } = usePrefs();
+  // Wide screens show the sidebar unless the user has collapsed it.
+  const showSide = wide && !prefs.sidebarHidden;
   const [tourStep, setTourStep] = useState<number | null>(null);
   const [tourChecked, setTourChecked] = useState(false);
   useEffect(() => {
@@ -126,14 +128,22 @@ function TallyScreen() {
 
   return (
     <SafeAreaView style={[styles.fill, styles.app, { backgroundColor: c.bg }]} edges={['top', 'bottom']}>
-      {wide && (
+      {showSide && (
         <View style={styles.sideWide}>
-          <Sidebar view={current} onSelect={select} onListMenu={openListMenu} onSettings={openSettings} />
+          <Sidebar
+            view={current}
+            onSelect={select}
+            onListMenu={openListMenu}
+            onSettings={openSettings}
+            onHide={() => setPrefs({ sidebarHidden: true })}
+          />
         </View>
       )}
       <MainList
         view={current}
-        onMenu={wide ? undefined : () => setDrawer(true)}
+        onMenu={wide ? (showSide ? undefined : () => setPrefs({ sidebarHidden: false })) : () => setDrawer(true)}
+        menuLabel={wide ? 'Show sidebar' : 'Open lists and views'}
+        full={wide && !showSide}
         selId={selId}
         onOpen={(id) => setSelId(selId === id ? null : id)}
         onEditList={setEditListId}
@@ -199,12 +209,15 @@ function TallyScreen() {
 type MainProps = {
   view: ViewId;
   onMenu?: () => void;
+  menuLabel: string;
+  /** Sidebar collapsed on a wide screen: use the extra width. */
+  full: boolean;
   selId: string | null;
   onOpen: (id: string) => void;
   onEditList: (listId: string) => void;
 };
 
-function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
+function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: MainProps) {
   const c = usePalette();
   const { lists, items, today, completions, progress, addItem, updateItem, toggle, toggleStep } = useData();
   const [showDone, setShowDone] = useState(true);
@@ -331,7 +344,12 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       tabIndex={-1}
       onPress={() => selId && onOpen(selId)}>
       <KeyboardAvoidingView
-        style={[styles.fill, styles.main, view === 'plan' && styles.mainWide]}
+        style={[
+          styles.fill,
+          styles.main,
+          (view === 'plan' || full) && styles.mainWide,
+          full && view === 'plan' && styles.mainFull,
+        ]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.head}>
           {onMenu && (
@@ -339,7 +357,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
               onPress={onMenu}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Open lists and views"
+              accessibilityLabel={menuLabel}
               style={styles.menu}>
               <Text style={{ color: c.ink, fontSize: 22 }}>☰</Text>
             </Pressable>
@@ -510,6 +528,7 @@ const styles = StyleSheet.create({
   sort: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingTop: 6, zIndex: 30 },
   // The week needs more room than a single list.
   mainWide: { maxWidth: 1400 },
+  mainFull: { maxWidth: 1800 },
   weekNav: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6 },
   weekBtn: {
     height: 32,

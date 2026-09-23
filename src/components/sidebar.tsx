@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
@@ -16,9 +17,11 @@ type Props = {
   /** Right-click (web) or long-press (phone) on a list. */
   onListMenu: (listId: string, anchor: MenuAnchor) => void;
   onSettings: () => void;
+  /** Wide screens only: collapse the sidebar. */
+  onHide?: () => void;
 };
 
-export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
+export function Sidebar({ view, onSelect, onListMenu, onSettings, onHide }: Props) {
   const c = usePalette();
   const { lists, items, today, completions, addList, reorderLists } = useData();
   const [name, setName] = useState('');
@@ -97,9 +100,21 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
   return (
     <View style={[styles.side, { backgroundColor: c.side }]} role="navigation" aria-label="Lists and views">
       <ScrollView contentContainerStyle={styles.scroll} scrollEnabled={!drag}>
-        <Text style={[styles.brand, { color: c.ink }]} accessibilityRole="header" aria-level={1} aria-label="Tally">
-          Tally<Text style={{ color: c.accent }}>.</Text>
-        </Text>
+        <View style={styles.brandRow}>
+          <Text style={[styles.brand, { color: c.ink }]} accessibilityRole="header" aria-level={1} aria-label="Tally">
+            Tally<Text style={{ color: c.accent }}>.</Text>
+          </Text>
+          {onHide && (
+            <Pressable
+              onPress={onHide}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Hide sidebar"
+              style={({ hovered }) => [styles.hide, hovered && { backgroundColor: c.line }]}>
+              <Ionicons name="chevron-back" size={18} color={c.muted} />
+            </Pressable>
+          )}
+        </View>
         {SMART_VIEWS.map((s) => nav(s.id, <Text style={{ color: c.accent }}>{s.icon}</Text>, s.name))}
         <View style={[styles.sep, { backgroundColor: c.line }]} />
         {shown.map((id, i) => {
@@ -159,6 +174,8 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
 const styles = StyleSheet.create({
   side: { flex: 1, paddingHorizontal: 12, paddingTop: 18, paddingBottom: 12 },
   scroll: { gap: 2 },
+  brandRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  hide: { width: 30, height: 30, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginTop: -4 },
   brand: { fontSize: 18, fontWeight: '700', paddingHorizontal: 10, paddingBottom: 14 },
   nav: {
     flexDirection: 'row',

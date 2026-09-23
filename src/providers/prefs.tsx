@@ -15,6 +15,8 @@ export type Prefs = {
   /** How My Day is sorted, and the dragged order (row keys) for 'custom'. */
   mydaySort?: SortMode;
   mydayOrder?: string[];
+  /** On wide screens, the sidebar is collapsed so tasks get the full width. */
+  sidebarHidden?: boolean;
 };
 
 const DEFAULT: Prefs = { theme: 'system' };
