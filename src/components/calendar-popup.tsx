@@ -1,6 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { usePalette } from '@/constants/tally';
 import { addMonths, monthGrid, monthLabel, monthStart } from '@/lib/calendar';
@@ -20,13 +20,36 @@ type Props = {
   onClose: () => void;
   /** Today / Tomorrow / Next week shortcuts. */
   quick?: boolean;
+  /** Where the button that opened it is, in window coordinates. The calendar drops down beneath it. */
+  anchor: Anchor | null;
 };
 
+export type Anchor = { x: number; y: number; width: number; height: number };
+
+const GAP = 6;
+const MARGIN = 8;
+
+/** Top-left for a popover of `size` under `anchor` (or above it if there's no room), kept inside the window. */
+function place(anchor: Anchor, size: { width: number; height: number }, win: { width: number; height: number }) {
+  const below = anchor.y + anchor.height + GAP;
+  const above = anchor.y - GAP - size.height;
+  const top = below + size.height <= win.height - MARGIN || above < MARGIN ? below : above;
+  // Right-align with the button when it's near the right edge, like a menu.
+  const left = anchor.x + size.width <= win.width - MARGIN ? anchor.x : anchor.x + anchor.width - size.width;
+  return {
+    top: Math.max(MARGIN, Math.min(top, win.height - size.height - MARGIN)),
+    left: Math.max(MARGIN, Math.min(left, win.width - size.width - MARGIN)),
+  };
+}
+
 /** Tally's own month calendar, themed with the user's colours on every platform. */
-export function CalendarPopup({ open, title, value, onPick, onClear, onClose, quick }: Props) {
+export function CalendarPopup({ open, title, value, onPick, onClear, onClose, quick, anchor }: Props) {
   const c = usePalette();
   const { today } = useData();
   const [month, setMonth] = useState(monthStart(value ?? today));
+  const win = useWindowDimensions();
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  const pos = anchor && size ? place(anchor, size, win) : null;
   useEffect(() => {
     if (open) setMonth(monthStart(value ?? today));
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -54,14 +77,22 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
   );
 
   return (
-    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
+    // statusBarTranslucent: on Android the layer then shares measureInWindow's coordinates.
+    <Modal visible={open} transparent animationType="fade" statusBarTranslucent onRequestClose={onClose}>
       {/* The popup is rendered inside a task row; stop presses here from reaching the row (which opens details). */}
       <View
-        style={styles.center}
+        style={styles.layer}
         onStartShouldSetResponder={() => true}
         {...{ onClick: (e: { stopPropagation: () => void }) => e.stopPropagation() }}>
-        <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Close calendar" />
-        <View style={[styles.card, { backgroundColor: c.panel, shadowColor: c.ink }]}>
+        <Pressable style={styles.layer} onPress={onClose} accessibilityLabel="Close calendar" />
+        <View
+          onLayout={(e) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
+          style={[
+            styles.card,
+            { backgroundColor: c.panel, shadowColor: c.ink, borderColor: c.line },
+            // Hidden for the first frame, until its size is known and it can be placed.
+            pos ? { top: pos.top, left: pos.left } : { opacity: 0 },
+          ]}>
           <Text style={[styles.title, { color: c.muted }]}>{title}</Text>
 
           {quick && (
@@ -150,17 +181,18 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
   );
 }
 
-const CELL = 38;
+const CELL = 34;
 const styles = StyleSheet.create({
-  // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
-  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
-  scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
+  // Absolute fill (react-native-web's Modal doesn't stretch flex: 1 children). Transparent: no dimming.
+  layer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 },
   card: {
-    borderRadius: 14,
-    padding: 14,
-    gap: 4,
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
+    position: 'absolute',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 10,
+    gap: 2,
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
   },
