@@ -4,13 +4,14 @@ import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, Text
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ColorField } from '@/components/color-field';
+import { ImportPanel } from '@/components/import-panel';
 import { usePalette } from '@/constants/tally';
 import { authErrorMessage, changePassword, deleteAccount } from '@/lib/account';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/providers/auth';
 import { usePrefs, type ThemeMode } from '@/providers/prefs';
 
-type Panel = 'main' | 'password' | 'delete';
+type Panel = 'main' | 'password' | 'delete' | 'import';
 
 /** Account management and appearance. Opened from the bottom of the sidebar. */
 export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClose: () => void; onReplayTour: () => void }) {
@@ -40,6 +41,7 @@ export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClo
             )}
             {panel === 'password' && <PasswordForm onBack={() => setPanel('main')} />}
             {panel === 'delete' && <DeleteForm onBack={() => setPanel('main')} />}
+            {panel === 'import' && <ImportPanel onBack={() => setPanel('main')} />}
           </ScrollView>
         </View>
       </GestureHandlerRootView>
@@ -96,6 +98,13 @@ function Main({ onPanel, onClose, onReplayTour }: { onPanel: (p: Panel) => void;
           )}
         </View>
         <ColorField value={c.accent} onChange={(accent) => setPrefs({ accent })} />
+      </Section>
+
+      <Section title="Import">
+        <Text style={{ color: c.muted, fontSize: 13 }}>
+          Add tasks from an Excel or CSV file, sorted into lists by a Class or List column.
+        </Text>
+        <Btn label="Import from spreadsheet…" onPress={() => onPanel('import')} />
       </Section>
 
       <Section title="Help">

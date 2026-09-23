@@ -15,6 +15,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { useRealToday } from '@/hooks/use-today';
 import { PRESET_COLORS } from '@/lib/color';
 import { db } from '@/lib/firebase';
+import type { ImportedTask } from '@/lib/import';
 import { completionKind } from '@/lib/recurrence';
 import { completesTask, toggledIds, type AllProgress } from '@/lib/steps';
 import type { Completion, DateStr, Item, List, StepProgress } from '@/lib/types';
@@ -35,6 +36,11 @@ type Data = {
   today: DateStr;
   addList: (name: string) => Promise<string>;
   updateList: (id: string, patch: Partial<Omit<List, 'id'>>) => Promise<void>;
+  /**
+   * Adds imported tasks. Lists are matched by name (ignoring case) and created if missing;
+   * tasks without a list go into `fallbackListId`. Returns how many tasks and lists were added.
+   */
+  importTasks: (tasks: ImportedTask[], fallbackListId: string) => Promise<{ tasks: number; lists: number }>;
   /** Saves a new list order (ids top to bottom). */
   reorderLists: (ids: string[]) => Promise<void>;
   /** Deletes the list, its tasks, and their completions and step progress. */
@@ -118,6 +124,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return ref.id;
       },
       updateList: (id, patch) => updateDoc(doc(col('lists'), id), patch),
+      importTasks: async (tasks, fallbackListId) => {
+        // Map each list name (lower-case) to its id, creating lists that don't exist yet.
+        const byName = new Map(ls.map((l) => [l.name.trim().toLowerCase(), l.id]));
+        const writes: [ReturnType<typeof doc>, object][] = [];
+        let order = ls.length ? Math.max(...ls.map((l) => l.order)) + 1 : 0;
+        let newLists = 0;
+        for (const t of tasks) {
+          const key = t.list?.trim().toLowerCase();
+          if (!key || byName.has(key)) continue;
+          const ref = doc(col('lists'));
+          byName.set(key, ref.id);
+          writes.push([ref, { name: t.list!.trim(), color: LIST_COLORS[(ls.length + newLists) % LIST_COLORS.length], order: order++ }]);
+          newLists++;
+        }
+        for (const t of tasks) {
+          const listId = (t.list && byName.get(t.list.trim().toLowerCase())) || fallbackListId;
+          writes.push([doc(col('items')), { title: t.title, listId, due: t.due, notes: t.notes, createdAt: serverTimestamp() }]);
+        }
+        // Firestore allows 500 writes per batch.
+        for (let i = 0; i < writes.length; i += 450) {
+          const batch = writeBatch(db!);
+          writes.slice(i, i + 450).forEach(([ref, data]) => batch.set(ref, data));
+          await batch.commit();
+        }
+        return { tasks: tasks.length, lists: newLists };
+      },
       reorderLists: async (ids) => {
         setLists((cur) => cur && ids.map((id, order) => ({ ...cur.find((l) => l.id === id)!, order }))); // instant
         const batch = writeBatch(db!);
