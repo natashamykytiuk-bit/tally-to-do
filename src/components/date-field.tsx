@@ -1,46 +1,42 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
-import { Platform, Pressable, Text } from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
+import { CalendarPopup } from '@/components/calendar-popup';
 import { usePalette } from '@/constants/tally';
-import { parseLocal, prettyDate, toLocalDateString } from '@/lib/dates';
+import { prettyDate } from '@/lib/dates';
 import type { DateStr } from '@/lib/types';
 
 type Props = { value?: DateStr; onChange: (d: DateStr) => void; placeholder: string };
 
-/** Native date field: a button that opens the platform picker. See date-field.web.tsx for web. */
+/** A field showing a date; tapping it opens Tally's calendar. */
 export function DateField({ value, onChange, placeholder }: Props) {
   const c = usePalette();
   const [open, setOpen] = useState(false);
-  const date = value ? parseLocal(value) : new Date();
-
-  // iOS renders the compact picker inline; Android opens a dialog on demand.
-  if (Platform.OS === 'ios') {
-    return (
-      <DateTimePicker
-        value={date}
-        mode="date"
-        display="compact"
-        onChange={(_, d) => d && onChange(toLocalDateString(d))}
-        style={{ alignSelf: 'flex-start' }}
-      />
-    );
-  }
   return (
     <>
-      <Pressable onPress={() => setOpen(true)} style={{ borderWidth: 1, borderColor: c.line, borderRadius: 8, padding: 9, backgroundColor: c.bg }}>
-        <Text style={{ color: value ? c.ink : c.muted }}>{value ? prettyDate(value) : placeholder}</Text>
+      <Pressable
+        onPress={() => setOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={value ? `${placeholder}: ${prettyDate(value)}` : placeholder}
+        style={({ hovered }) => [styles.field, { borderColor: hovered ? c.accent : c.line, backgroundColor: c.bg }]}>
+        <Ionicons name="calendar-outline" size={16} color={value ? c.accent : c.muted} />
+        <Text style={{ color: value ? c.ink : c.muted, fontSize: 14 }}>{value ? prettyDate(value) : placeholder}</Text>
       </Pressable>
-      {open && (
-        <DateTimePicker
-          value={date}
-          mode="date"
-          onChange={(e, d) => {
-            setOpen(false);
-            if (e.type === 'set' && d) onChange(toLocalDateString(d));
-          }}
-        />
-      )}
+      <CalendarPopup open={open} title={placeholder} value={value} onPick={onChange} onClose={() => setOpen(false)} />
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  field: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+  },
+});

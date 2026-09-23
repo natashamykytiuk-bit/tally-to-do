@@ -236,7 +236,8 @@ function Field(props: {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
+  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
   scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   card: { width: '100%', maxWidth: 440, maxHeight: '92%', borderRadius: 14 },
   body: { padding: 18, gap: 12 },

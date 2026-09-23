@@ -74,7 +74,8 @@ export function ListSettings({
 }
 
 const styles = StyleSheet.create({
-  fill: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
+  fill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
   scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   card: { width: '100%', maxWidth: 400, maxHeight: '90%', borderRadius: 14 },
   body: { padding: 18, gap: 10 },
