@@ -253,18 +253,19 @@ const styles = StyleSheet.create({
   },
   chk: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, minWidth: 0 },
-  title: { fontSize: 15 },
+  // Long words (e.g. "PrairieLearn") break instead of spilling out of narrow cards; web-only style.
+  title: { fontSize: 15, overflowWrap: 'anywhere' } as object,
   compact: { gap: 8, paddingVertical: 8, paddingHorizontal: 8, alignItems: 'flex-start' },
   // Only the text itself is the edit target; the rest of the row still opens details.
-  titleHit: { alignSelf: 'flex-start' },
+  titleHit: { alignSelf: 'flex-start', maxWidth: '100%' },
   titleInput: { borderBottomWidth: 1, paddingVertical: 0, marginVertical: -1 },
   strike: { textDecorationLine: 'line-through' },
   steps: { marginTop: 6, gap: 4 },
   step: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start' },
   stepBox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   stepTick: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  stepText: { fontSize: 13.5 },
-  meta: { fontSize: 12.5, marginTop: 2 },
+  stepText: { fontSize: 13.5, flexShrink: 1, overflowWrap: 'anywhere' } as object,
+  meta: { fontSize: 12.5, marginTop: 2, overflowWrap: 'anywhere' } as object,
   streak: {
     fontSize: 12,
     borderRadius: 20,
