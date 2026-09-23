@@ -20,7 +20,7 @@ export const TOUR: TourStep[] = [
   {
     icon: '📚',
     title: 'Lists',
-    body: 'Make a list for each class or project in the sidebar. Drag ≡ to reorder, and right-click a list (long-press on a phone) to rename it, recolour it or delete it. Tasks you add outside a list collect under No list.',
+    body: 'Make a list for each class or project in the sidebar. Drag ≡ to reorder, and right-click a list (long-press on a phone) to rename it, recolour it or delete it. Tasks you add outside a list collect under Tasks.',
     view: 'list',
   },
   {

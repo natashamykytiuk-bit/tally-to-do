@@ -64,7 +64,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
         <Text style={label}>List</Text>
         <View style={styles.chips}>
           <Pressable onPress={() => set({ listId: undefined })} style={chip(!item.listId)}>
-            <Text style={chipText(!item.listId)}>No list</Text>
+            <Text style={chipText(!item.listId)}>None</Text>
           </Pressable>
           {lists.map((l) => (
             <Pressable key={l.id} onPress={() => set({ listId: l.id })} style={chip(l.id === item.listId)}>

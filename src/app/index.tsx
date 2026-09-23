@@ -34,7 +34,6 @@ import {
   newItemDefaults,
   plannedGroup,
   rowsFor,
-  NO_LIST,
   SMART_VIEWS,
   type Row,
   type ViewId,
@@ -79,7 +78,7 @@ function TallyScreen() {
     setTourStep(i);
     setSelId(null);
     const v = TOUR[i].view;
-    if (v) setView(v === 'list' ? (data.lists[0]?.id ?? 'myday') : v);
+    if (v) setView(v === 'list' ? (data.lists[0]?.id ?? 'nolist') : v);
   };
   const endTour = () => {
     setTourStep(null);
@@ -199,7 +198,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const addsHabit = view === 'habits' || (canRepeat && repeat);
 
   const list = lists.find((l) => l.id === view);
-  const title = [...SMART_VIEWS, NO_LIST].find((s) => s.id === view)?.name ?? list?.name ?? '';
+  const title = SMART_VIEWS.find((s) => s.id === view)?.name ?? list?.name ?? '';
   const subtitle =
     view === 'myday'
       ? prettyDate(today)

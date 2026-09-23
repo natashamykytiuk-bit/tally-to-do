@@ -10,7 +10,7 @@ import {
   updateDoc,
   writeBatch,
 } from 'firebase/firestore';
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { useRealToday } from '@/hooks/use-today';
 import { PRESET_COLORS } from '@/lib/color';
@@ -25,7 +25,6 @@ import { useAuth } from '@/providers/auth';
 
 // New lists cycle through the original six colours.
 const LIST_COLORS = PRESET_COLORS.slice(0, 6);
-const DEFAULT_LIST = { name: 'Tasks', color: LIST_COLORS[0], order: 0 };
 
 type Data = {
   ready: boolean;
@@ -99,15 +98,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uid]);
 
-  // First sign-in: give the user one list to put tasks in. Only checks the first load, so
-  // wiping data during account deletion doesn't recreate it.
-  const checkedFirstLoad = useRef<string | null>(null);
-  useEffect(() => {
-    if (!db || !uid || !lists || checkedFirstLoad.current === uid) return;
-    checkedFirstLoad.current = uid;
-    if (lists.length === 0) setDoc(doc(col('lists'), 'tasks'), DEFAULT_LIST);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [uid, lists]);
 
   const value = useMemo<Data>(() => {
     const ls = lists ?? [];
@@ -159,8 +149,6 @@ export function DataProvider({ children }: { children: ReactNode }) {
       deleteList: async (id) => {
         const batch = writeBatch(db!);
         batch.delete(doc(col('lists'), id));
-        // Always keep one list, so there's somewhere to add tasks.
-        if (ls.every((l) => l.id === id)) batch.set(doc(col('lists')), DEFAULT_LIST);
         for (const it of (items ?? []).filter((i) => i.listId === id)) {
           batch.delete(doc(col('items'), it.id));
           for (const date of Object.keys(completions[it.id] ?? {})) batch.delete(doc(col('completions'), `${it.id}_${date}`));

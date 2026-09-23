@@ -7,7 +7,7 @@ import { Copyright } from '@/components/copyright';
 import type { MenuAnchor } from '@/components/list-menu';
 import { usePalette } from '@/constants/tally';
 import { dropIndex, moveIndex } from '@/lib/reorder';
-import { NO_LIST, SMART_VIEWS, openCount, type ViewId } from '@/lib/views';
+import { SMART_VIEWS, openCount, type ViewId } from '@/lib/views';
 import { useData } from '@/providers/data';
 
 type Props = {
@@ -92,7 +92,6 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
         </Text>
         {SMART_VIEWS.map((s) => nav(s.id, <Text style={{ color: c.accent }}>{s.icon}</Text>, s.name))}
         <View style={[styles.sep, { backgroundColor: c.line }]} />
-        {nav(NO_LIST.id, <Text style={{ color: c.muted }}>{NO_LIST.icon}</Text>, NO_LIST.name)}
         {shown.map((id, i) => {
           const l = lists.find((x) => x.id === id)!;
           const dragging = drag?.id === id;

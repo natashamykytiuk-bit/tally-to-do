@@ -111,7 +111,7 @@ describe('planning', () => {
   });
 });
 
-test('No list shows tasks without a list; smart views add tasks with no list', () => {
+test('Tasks shows tasks without a list; smart views add tasks with no list', () => {
   const loose: Item[] = [
     { id: 'a', title: 'Buy stamps' },
     { id: 'b', listId: 'cpen', title: 'Lab' },

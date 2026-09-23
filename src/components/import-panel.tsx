@@ -150,7 +150,7 @@ function Preview(props: {
       )}
       {unlisted > 0 && (
         <Text style={[styles.small, { color: c.muted }]}>
-          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no class, so {unlisted === 1 ? 'it goes' : 'they go'} under “No list”.
+          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no class, so {unlisted === 1 ? 'it goes' : 'they go'} under Tasks.
         </Text>
       )}
       {sheet.skipped > 0 && (

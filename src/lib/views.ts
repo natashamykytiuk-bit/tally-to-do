@@ -11,13 +11,14 @@ export const SMART_VIEWS: { id: SmartView; icon: string; name: string }[] = [
   { id: 'myday', icon: '☀', name: 'My Day' },
   { id: 'plan', icon: '✎', name: 'Plan' },
   { id: 'planned', icon: '▦', name: 'Scheduled' },
+  { id: 'nolist', icon: '☰', name: 'Tasks' },
   { id: 'habits', icon: '↻', name: 'Habits' },
 ];
 
-/** Tasks that aren't in any list. Shown with the lists in the sidebar. */
-export const NO_LIST = { id: 'nolist' as const, icon: '○', name: 'No list' };
+/** The "Tasks" view: everything that isn't in one of the user's lists. */
+export const NO_LIST = 'nolist';
 
-export const isSmartView = (v: ViewId): v is SmartView => v === NO_LIST.id || SMART_VIEWS.some((s) => s.id === v);
+export const isSmartView = (v: ViewId): v is SmartView => SMART_VIEWS.some((s) => s.id === v);
 
 /**
  * One row on screen. For recurring items `date` is the occurrence it checks off
@@ -63,7 +64,7 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
       if (!item.rule && item.due) rows.push(one());
     } else if (view === 'habits') {
       if (item.rule) rows.push(...habitRow(item, today, all));
-    } else if (view === NO_LIST.id) {
+    } else if (view === NO_LIST) {
       if (!item.listId) item.rule ? rows.push(...habitRow(item, today, all)) : rows.push(one());
     } else if (item.listId === view) {
       item.rule ? rows.push(...habitRow(item, today, all)) : rows.push(one());
