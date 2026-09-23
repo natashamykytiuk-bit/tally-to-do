@@ -18,6 +18,7 @@ export function PlanDaysField({ days, onChange }: { days: DateStr[]; onChange: (
         ref={ref}
         onPress={show}
         accessibilityRole="button"
+        accessibilityLabel={days.length ? `Change work days, ${days.length} chosen` : 'Choose days to work on it'}
         style={({ hovered }) => [styles.field, { borderColor: hovered ? c.accent : c.line, backgroundColor: c.bg }]}>
         <Ionicons name="time-outline" size={16} color={days.length ? c.accent : c.muted} />
         <Text style={{ color: c.ink, fontSize: 14 }}>{days.length ? 'Change days…' : 'Choose days…'}</Text>

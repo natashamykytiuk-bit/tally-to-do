@@ -27,7 +27,9 @@ export default function SignIn() {
       <ThemedView style={styles.fill}>
         <SafeAreaView style={styles.form}>
           <ThemedText type="subtitle">Firebase isn’t set up yet</ThemedText>
-          <ThemedText>Copy .env.example to .env.local, fill in your Firebase web app keys, then restart Expo.</ThemedText>
+          <ThemedText>
+            Copy .env.example to .env.local, fill in your Firebase web app keys, then restart Expo.
+          </ThemedText>
         </SafeAreaView>
       </ThemedView>
     );
@@ -50,17 +52,44 @@ export default function SignIn() {
   return (
     <ThemedView style={styles.fill}>
       <SafeAreaView style={styles.form}>
-        <ThemedText type="title">Tally</ThemedText>
-        <TextInput style={input} placeholder="Email" autoCapitalize="none" keyboardType="email-address"
-          autoComplete="email" value={email} onChangeText={setEmail} />
-        <TextInput style={input} placeholder="Password" secureTextEntry
-          autoComplete={mode === 'in' ? 'current-password' : 'new-password'} value={password} onChangeText={setPassword} />
-        {!!error && <ThemedText style={styles.error}>{error}</ThemedText>}
-        <Pressable style={[styles.btn, busy && { opacity: 0.6 }]} disabled={busy} onPress={submit}>
+        <ThemedText type="title" role="heading" aria-level={1}>
+          Tally
+        </ThemedText>
+        <TextInput
+          accessibilityLabel="Email"
+          style={input}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+          autoComplete="email"
+          value={email}
+          onChangeText={setEmail}
+        />
+        <TextInput
+          accessibilityLabel="Password"
+          style={input}
+          placeholder="Password"
+          secureTextEntry
+          autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
+          value={password}
+          onChangeText={setPassword}
+        />
+        {!!error && (
+          <ThemedText style={styles.error} role="alert">
+            {error}
+          </ThemedText>
+        )}
+        <Pressable
+          accessibilityRole="button"
+          style={[styles.btn, busy && { opacity: 0.6 }]}
+          disabled={busy}
+          onPress={submit}>
           <ThemedText style={styles.btnText}>{mode === 'in' ? 'Sign in' : 'Create account'}</ThemedText>
         </Pressable>
-        <Pressable onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
-          <ThemedText type="link">{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</ThemedText>
+        <Pressable accessibilityRole="button" onPress={() => setMode(mode === 'in' ? 'up' : 'in')}>
+          <ThemedText type="link">
+            {mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}
+          </ThemedText>
         </Pressable>
         {/* TODO: Google sign-in (needs OAuth client IDs; expo-auth-session + signInWithCredential). */}
       </SafeAreaView>

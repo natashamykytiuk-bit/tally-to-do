@@ -19,7 +19,7 @@ export function ProgressCircle({ size, fraction, color, ring }: Props) {
   }
 
   return (
-    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-hidden focusable={false}>
       {f >= 1 ? (
         <>
           <Circle cx={r} cy={r} r={r - stroke / 2} fill={color} stroke={color} strokeWidth={stroke} />

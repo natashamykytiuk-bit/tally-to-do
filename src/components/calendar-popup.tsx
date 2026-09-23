@@ -67,7 +67,7 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
     onPick(d);
   };
   // Next Monday, or a week out if today is Monday.
-  const nextWeek = addDaysStr(today, ((8 - dow(today)) % 7) || 7);
+  const nextWeek = addDaysStr(today, (8 - dow(today)) % 7 || 7);
   const shortcuts: [string, DateStr][] = [
     ['Today', today],
     ['Tomorrow', addDaysStr(today, 1)],
@@ -76,6 +76,7 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
 
   const navBtn = (icon: 'chevron-back' | 'chevron-forward', n: number, label: string) => (
     <Pressable
+      accessibilityRole="button"
       onPress={() => setMonth(addMonths(month, n))}
       hitSlop={8}
       accessibilityLabel={label}
@@ -92,8 +93,16 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
         style={styles.layer}
         onStartShouldSetResponder={() => true}
         {...{ onClick: (e: { stopPropagation: () => void }) => e.stopPropagation() }}>
-        <Pressable style={styles.layer} onPress={onClose} accessibilityLabel="Close calendar" />
+        <Pressable
+          accessibilityRole="button"
+          style={styles.layer}
+          onPress={onClose}
+          accessibilityLabel="Close calendar"
+        />
         <View
+          role="dialog"
+          aria-modal
+          aria-label={title}
           onLayout={(e) => setSize({ width: e.nativeEvent.layout.width, height: e.nativeEvent.layout.height })}
           style={[
             styles.card,
@@ -109,9 +118,13 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
                 const on = isOn(d);
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={name}
                     onPress={() => pick(d)}
-                    style={[styles.chip, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg }]}>
+                    style={[
+                      styles.chip,
+                      { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg },
+                    ]}>
                     <Text style={{ color: on ? '#fff' : c.ink, fontSize: 13 }}>{name}</Text>
                   </Pressable>
                 );
@@ -169,13 +182,16 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
           {multiple ? (
             <View style={styles.foot}>
               <Text style={{ color: c.muted, fontSize: 12.5 }}>
-                {picked.length ? `${picked.length} ${picked.length === 1 ? 'day' : 'days'} picked` : 'Tap days to pick them'}
+                {picked.length
+                  ? `${picked.length} ${picked.length === 1 ? 'day' : 'days'} picked`
+                  : 'Tap days to pick them'}
               </Text>
               <View style={{ flexDirection: 'row', gap: 16 }}>
-                <Pressable onPress={onClose} hitSlop={6}>
+                <Pressable accessibilityRole="button" onPress={onClose} hitSlop={6}>
                   <Text style={{ color: c.muted, fontWeight: '600' }}>Cancel</Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => {
                     onClose();
                     multiple.onDone(picked);
@@ -186,23 +202,24 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
               </View>
             </View>
           ) : (
-          <View style={styles.foot}>
-            {onClear && value ? (
-              <Pressable
-                onPress={() => {
-                  onClose();
-                  onClear();
-                }}
-                hitSlop={6}>
-                <Text style={{ color: c.warn, fontWeight: '600' }}>Remove</Text>
+            <View style={styles.foot}>
+              {onClear && value ? (
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => {
+                    onClose();
+                    onClear();
+                  }}
+                  hitSlop={6}>
+                  <Text style={{ color: c.warn, fontWeight: '600' }}>Remove</Text>
+                </Pressable>
+              ) : (
+                <View />
+              )}
+              <Pressable accessibilityRole="button" onPress={onClose} hitSlop={6}>
+                <Text style={{ color: c.accent, fontWeight: '600' }}>Cancel</Text>
               </Pressable>
-            ) : (
-              <View />
-            )}
-            <Pressable onPress={onClose} hitSlop={6}>
-              <Text style={{ color: c.accent, fontWeight: '600' }}>Cancel</Text>
-            </Pressable>
-          </View>
+            </View>
           )}
         </View>
       </View>

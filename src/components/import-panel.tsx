@@ -53,7 +53,7 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
   };
 
   const primary = (label: string, onPress: () => void) => (
-    <Pressable onPress={onPress} style={[styles.primary, { backgroundColor: c.accent }]}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.primary, { backgroundColor: c.accent }]}>
       <Text style={{ color: '#fff', fontWeight: '600' }}>{label}</Text>
     </Pressable>
   );
@@ -61,7 +61,7 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
   return (
     <>
       <View style={styles.row}>
-        <Pressable onPress={onBack} hitSlop={10} accessibilityLabel="Back">
+        <Pressable accessibilityRole="button" onPress={onBack} hitSlop={10} accessibilityLabel="Back">
           <Text style={{ color: c.accent, fontSize: 18 }}>‹</Text>
         </Pressable>
         <Text style={[styles.h, { color: c.ink }]}>Import from a spreadsheet</Text>
@@ -70,7 +70,8 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
       {state.stage === 'pick' && (
         <>
           <Text style={[styles.p, { color: c.ink }]}>
-            Add tasks from an Excel (.xlsx, .xls) or CSV file. Tally reads the first sheet and uses its header row to find:
+            Add tasks from an Excel (.xlsx, .xls) or CSV file. Tally reads the first sheet and uses its header row to
+            find:
           </Text>
           <View style={[styles.box, { backgroundColor: c.bg }]}>
             <Text style={[styles.p, { color: c.ink }]}>
@@ -80,7 +81,8 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
               <Text style={styles.b}>Due</Text> (or Date, Deadline)
             </Text>
             <Text style={[styles.p, { color: c.ink }]}>
-              <Text style={styles.b}>Class</Text> (or List, Course, Subject): tasks are sorted into these lists, which are created if needed
+              <Text style={styles.b}>Class</Text> (or List, Course, Subject): tasks are sorted into these lists, which
+              are created if needed
             </Text>
             <Text style={[styles.p, { color: c.ink }]}>
               <Text style={styles.b}>Notes</Text> (or Description)
@@ -95,7 +97,9 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
       {(state.stage === 'reading' || state.stage === 'importing') && (
         <View style={styles.center}>
           <ActivityIndicator color={c.accent} />
-          <Text style={{ color: c.muted }}>{state.stage === 'reading' ? 'Reading the file…' : 'Adding your tasks…'}</Text>
+          <Text style={{ color: c.muted }}>
+            {state.stage === 'reading' ? 'Reading the file…' : 'Adding your tasks…'}
+          </Text>
         </View>
       )}
 
@@ -145,12 +149,11 @@ function Preview(props: {
         {dated ? `, ${dated} with due dates` : ''}.
       </Text>
       <Text style={[styles.small, { color: c.muted }]}>Columns used: {cols}.</Text>
-      {newLists.length > 0 && (
-        <Text style={[styles.p, { color: c.ink }]}>New lists: {newLists.join(', ')}.</Text>
-      )}
+      {newLists.length > 0 && <Text style={[styles.p, { color: c.ink }]}>New lists: {newLists.join(', ')}.</Text>}
       {unlisted > 0 && (
         <Text style={[styles.small, { color: c.muted }]}>
-          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no class, so {unlisted === 1 ? 'it goes' : 'they go'} under Tasks.
+          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no class, so {unlisted === 1 ? 'it goes' : 'they go'}{' '}
+          under Tasks.
         </Text>
       )}
       {sheet.skipped > 0 && (
@@ -174,10 +177,16 @@ function Preview(props: {
       </View>
 
       <View style={[styles.row, { justifyContent: 'flex-end' }]}>
-        <Pressable onPress={props.onCancel} style={[styles.btn, { backgroundColor: c.accentSoft }]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={props.onCancel}
+          style={[styles.btn, { backgroundColor: c.accentSoft }]}>
           <Text style={{ color: c.accent, fontWeight: '600' }}>Cancel</Text>
         </Pressable>
-        <Pressable onPress={props.onImport} style={[styles.btn, { backgroundColor: c.accent }]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={props.onImport}
+          style={[styles.btn, { backgroundColor: c.accent }]}>
           <Text style={{ color: '#fff', fontWeight: '600' }}>
             Import {n} {n === 1 ? 'task' : 'tasks'}
           </Text>

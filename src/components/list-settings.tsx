@@ -32,9 +32,14 @@ export function ListSettings({
     <Modal visible={!!list} transparent animationType="fade" onRequestClose={onClose}>
       {/* Modals render outside the app root, so the colour wheel's gestures need their own root view. */}
       <GestureHandlerRootView style={styles.fill}>
-        <Pressable style={styles.scrim} onPress={onClose} accessibilityLabel="Close list settings" />
+        <Pressable
+          accessibilityRole="button"
+          style={styles.scrim}
+          onPress={onClose}
+          accessibilityLabel="Close list settings"
+        />
         {list && (
-          <View style={[styles.card, { backgroundColor: c.panel }]}>
+          <View style={[styles.card, { backgroundColor: c.panel }]} role="dialog" aria-modal aria-label="List settings">
             <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
               <Text style={[styles.h, { color: c.ink }]}>List settings</Text>
               <Text style={[styles.label, { color: c.muted }]}>Name</Text>
@@ -49,6 +54,7 @@ export function ListSettings({
               <ColorField value={list.color} onChange={(color) => updateList(list.id, { color })} />
               <View style={styles.foot}>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => {
                     onClose();
                     onDelete(list);
@@ -57,6 +63,7 @@ export function ListSettings({
                   <Text style={{ color: c.warn, fontWeight: '600' }}>Delete list</Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => {
                     saveName();
                     onClose();
@@ -75,7 +82,16 @@ export function ListSettings({
 
 const styles = StyleSheet.create({
   // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
-  fill: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  fill: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
   scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   card: { width: '100%', maxWidth: 400, maxHeight: '90%', borderRadius: 14 },
   body: { padding: 18, gap: 10 },

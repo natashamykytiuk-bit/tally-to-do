@@ -17,19 +17,23 @@ export function Tour({ step, onStep, onDone }: Props) {
 
   return (
     <View
-      accessibilityRole="alert"
+      role="dialog"
+      aria-label={`Tour, step ${step + 1} of ${TOUR.length}: ${s.title}`}
+      aria-live="polite"
       style={[
         styles.card,
         wide ? styles.corner : styles.bottom,
         { backgroundColor: c.panel, borderColor: c.line, shadowColor: c.ink },
       ]}>
       <View style={styles.head}>
-        <View style={[styles.icon, { backgroundColor: c.accentSoft }]}>
+        <View style={[styles.icon, { backgroundColor: c.accentSoft }]} aria-hidden>
           <Text style={{ fontSize: 18, color: c.accent }}>{s.icon}</Text>
         </View>
-        <Text style={[styles.title, { color: c.ink }]}>{s.title}</Text>
+        <Text style={[styles.title, { color: c.ink }]} role="heading" aria-level={2}>
+          {s.title}
+        </Text>
         {!last && (
-          <Pressable onPress={onDone} hitSlop={8} accessibilityLabel="Skip the tour">
+          <Pressable accessibilityRole="button" onPress={onDone} hitSlop={8} accessibilityLabel="Skip the tour">
             <Text style={{ color: c.muted, fontSize: 13 }}>Skip</Text>
           </Pressable>
         )}
@@ -37,21 +41,27 @@ export function Tour({ step, onStep, onDone }: Props) {
       <Text style={[styles.body, { color: c.ink }]}>{s.body}</Text>
 
       <View style={styles.foot}>
-        <View style={styles.dots} accessibilityLabel={`Step ${step + 1} of ${TOUR.length}`}>
+        <View style={styles.dots} role="img" aria-label={`Step ${step + 1} of ${TOUR.length}`}>
           {TOUR.map((_, i) => (
             <View key={i} style={[styles.dot, { backgroundColor: i === step ? c.accent : c.line }]} />
           ))}
         </View>
         <View style={styles.buttons}>
           {step > 0 && (
-            <Pressable onPress={() => onStep(step - 1)} style={[styles.btn, { backgroundColor: c.accentSoft }]}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => onStep(step - 1)}
+              style={[styles.btn, { backgroundColor: c.accentSoft }]}>
               <Text style={{ color: c.accent, fontWeight: '600' }}>Back</Text>
             </Pressable>
           )}
           <Pressable
+            accessibilityRole="button"
             onPress={() => (last ? onDone() : onStep(step + 1))}
             style={[styles.btn, { backgroundColor: c.accent }]}>
-            <Text style={{ color: '#fff', fontWeight: '600' }}>{last ? 'Get started' : step === 0 ? 'Show me' : 'Next'}</Text>
+            <Text style={{ color: '#fff', fontWeight: '600' }}>
+              {last ? 'Get started' : step === 0 ? 'Show me' : 'Next'}
+            </Text>
           </Pressable>
         </View>
       </View>

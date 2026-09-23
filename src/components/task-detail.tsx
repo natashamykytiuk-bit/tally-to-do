@@ -33,7 +33,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
   const saveNotes = () => notes !== (item.notes ?? '') && set({ notes: notes || undefined });
 
   // Next Monday, or a week out if today is Monday.
-  const nextWeek = addDaysStr(today, ((8 - dow(today)) % 7) || 7);
+  const nextWeek = addDaysStr(today, (8 - dow(today)) % 7 || 7);
   const quick: [string, string][] = [
     ['Today', today],
     ['Tomorrow', addDaysStr(today, 1)],
@@ -42,11 +42,18 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
 
   const card = [styles.card, { backgroundColor: c.panel, shadowColor: c.ink }];
   const label = [styles.label, { color: c.muted }];
-  const chip = (on: boolean) => [styles.chip, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg }];
+  const chip = (on: boolean) => [
+    styles.chip,
+    { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg },
+  ];
   const chipText = (on: boolean) => ({ color: on ? '#fff' : c.ink, fontSize: 13 });
 
   return (
-    <ScrollView contentContainerStyle={styles.wrap} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.wrap}
+      keyboardShouldPersistTaps="handled"
+      role="region"
+      aria-label={`Details: ${item.title}`}>
       <View style={styles.top}>
         <TextInput
           value={title}
@@ -64,13 +71,24 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
 
       <View style={card}>
         <Text style={label}>List</Text>
-        <View style={styles.chips}>
-          <Pressable onPress={() => set({ listId: undefined })} style={chip(!item.listId)}>
+        <View style={styles.chips} role="radiogroup" aria-label="List">
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel="No list"
+            accessibilityState={{ checked: !item.listId }}
+            onPress={() => set({ listId: undefined })}
+            style={chip(!item.listId)}>
             <Text style={chipText(!item.listId)}>None</Text>
           </Pressable>
           {lists.map((l) => (
-            <Pressable key={l.id} onPress={() => set({ listId: l.id })} style={chip(l.id === item.listId)}>
-              <View style={[styles.dot, { backgroundColor: l.id === item.listId ? '#fff' : l.color }]} />
+            <Pressable
+              accessibilityRole="radio"
+              accessibilityLabel={`List: ${l.name}`}
+              accessibilityState={{ checked: l.id === item.listId }}
+              key={l.id}
+              onPress={() => set({ listId: l.id })}
+              style={chip(l.id === item.listId)}>
+              <View aria-hidden style={[styles.dot, { backgroundColor: l.id === item.listId ? '#fff' : l.color }]} />
               <Text style={chipText(l.id === item.listId)}>{l.name}</Text>
             </Pressable>
           ))}
@@ -90,9 +108,13 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
               </Text>
             </View>
             <Pressable
+              accessibilityRole="button"
               onPress={() => set({ doneForDay: restingToday ? undefined : today })}
+              accessibilityLabel={restingToday ? 'Undo done for today' : 'Done for today'}
               style={[styles.btn, { backgroundColor: restingToday ? c.accentSoft : c.accent }]}>
-              <Text style={{ color: restingToday ? c.accent : '#fff', fontWeight: '600' }}>{restingToday ? 'Undo' : 'Done for today'}</Text>
+              <Text style={{ color: restingToday ? c.accent : '#fff', fontWeight: '600' }}>
+                {restingToday ? 'Undo' : 'Done for today'}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -103,6 +125,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           <View style={styles.row}>
             <Text style={{ color: c.ink, fontSize: 15 }}>☀ Add to My Day</Text>
             <Switch
+              accessibilityLabel="Add to My Day"
               value={item.myDay === today}
               onValueChange={(on) => set({ myDay: on ? today : undefined })}
               trackColor={{ true: c.accent }}
@@ -113,7 +136,13 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           <Text style={[label, { marginTop: 6 }]}>Due date</Text>
           <View style={styles.chips}>
             {quick.map(([name, d]) => (
-              <Pressable key={name} onPress={() => set({ due: d })} style={chip(item.due === d)}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Due ${name.toLowerCase()}`}
+                accessibilityState={{ selected: item.due === d }}
+                key={name}
+                onPress={() => set({ due: d })}
+                style={chip(item.due === d)}>
                 <Text style={chipText(item.due === d)}>{name}</Text>
               </Pressable>
             ))}
@@ -121,14 +150,15 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           <View style={styles.row}>
             <DateField value={item.due} onChange={(d) => set({ due: d })} placeholder="Pick a date" />
             {item.due && (
-              <Pressable onPress={() => set({ due: undefined })} hitSlop={8}>
+              <Pressable accessibilityRole="button" onPress={() => set({ due: undefined })} hitSlop={8}>
                 <Text style={{ color: c.warn }}>Remove</Text>
               </Pressable>
             )}
           </View>
           {item.due && (
             <Text style={[styles.hint, { color: c.muted }]}>
-              Due {item.due === today ? 'today' : prettyDate(item.due)}. Shows in Scheduled, and in My Day once it’s due.
+              Due {item.due === today ? 'today' : prettyDate(item.due)}. Shows in Scheduled, and in My Day once it’s
+              due.
             </Text>
           )}
 
@@ -138,6 +168,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
               <View key={d} style={[styles.chip, { borderColor: c.accent, backgroundColor: c.accentSoft }]}>
                 <Text style={{ color: c.ink, fontSize: 13 }}>{d === today ? 'Today' : prettyDate(d)}</Text>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => set(plansPatch(togglePlanDay(plansOf(item), d)))}
                   hitSlop={8}
                   accessibilityLabel={`Remove ${prettyDate(d)}`}>
@@ -162,6 +193,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
       <View style={card}>
         <Text style={label}>Notes</Text>
         <TextInput
+          accessibilityLabel="Add notes"
           value={notes}
           onChangeText={setNotes}
           onBlur={saveNotes}
@@ -173,10 +205,11 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
       </View>
 
       <View style={styles.foot}>
-        <Pressable onPress={onClose} style={[styles.btn, { backgroundColor: c.accentSoft }]}>
+        <Pressable accessibilityRole="button" onPress={onClose} style={[styles.btn, { backgroundColor: c.accentSoft }]}>
           <Text style={{ color: c.accent, fontWeight: '600' }}>Close</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
           onPress={() => {
             onClose();
             deleteItem(item.id);
@@ -204,7 +237,15 @@ const styles = StyleSheet.create({
   },
   label: { fontSize: 13 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
   dot: { width: 8, height: 8, borderRadius: 4 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
   hint: { fontSize: 12 },

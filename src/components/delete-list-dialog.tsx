@@ -19,9 +19,9 @@ export function DeleteListDialog({
   return (
     <Modal visible={!!list} transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.center}>
-        <Pressable style={styles.scrim} onPress={onCancel} accessibilityLabel="Cancel" />
+        <Pressable accessibilityRole="button" style={styles.scrim} onPress={onCancel} accessibilityLabel="Cancel" />
         {list && (
-          <View style={[styles.card, { backgroundColor: c.panel }]} accessibilityRole="alert">
+          <View style={[styles.card, { backgroundColor: c.panel }]} role="alertdialog" aria-modal aria-label={`Delete ${list.name}?`}>
             <Text style={[styles.h, { color: c.ink }]}>Delete “{list.name}”?</Text>
             <Text style={{ color: c.muted, fontSize: 14 }}>
               {taskCount === 0
@@ -30,10 +30,16 @@ export function DeleteListDialog({
               This can’t be undone.
             </Text>
             <View style={styles.buttons}>
-              <Pressable onPress={onCancel} style={[styles.btn, { backgroundColor: c.accentSoft }]}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={onCancel}
+                style={[styles.btn, { backgroundColor: c.accentSoft }]}>
                 <Text style={{ color: c.accent, fontWeight: '600' }}>Cancel</Text>
               </Pressable>
-              <Pressable onPress={onConfirm} style={[styles.btn, { backgroundColor: c.warn }]}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={onConfirm}
+                style={[styles.btn, { backgroundColor: c.warn }]}>
                 <Text style={{ color: '#fff', fontWeight: '600' }}>Delete list</Text>
               </Pressable>
             </View>
@@ -46,7 +52,16 @@ export function DeleteListDialog({
 
 const styles = StyleSheet.create({
   // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
-  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  center: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
   scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   card: { width: '100%', maxWidth: 380, borderRadius: 14, padding: 18, gap: 10 },
   h: { fontSize: 18, fontWeight: '700' },

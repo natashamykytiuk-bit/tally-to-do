@@ -27,7 +27,10 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
   const setRule = (rule: Rule) => set({ rule });
   const every = r ? unitOf(r) : null;
 
-  const chip = (on: boolean) => [styles.chip, { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg }];
+  const chip = (on: boolean) => [
+    styles.chip,
+    { borderColor: on ? c.accent : c.line, backgroundColor: on ? c.accent : c.bg },
+  ];
   const chipText = (on: boolean) => ({ color: on ? '#fff' : c.ink, fontSize: 13 });
   const label = [styles.label, { color: c.muted }];
 
@@ -87,8 +90,16 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
           {r.type === 'weekdays' && dayChips({ type: 'weekly', days: [1, 2, 3, 4, 5], interval: 1 })}
           {r.type === 'monthly' && (
             <>
-              <Stepper before="On day" after="of the month" value={r.dom} max={31} onChange={(dom) => setRule({ ...r, dom })} />
-              {r.dom > 28 && <Text style={[styles.hint, { color: c.muted }]}>In shorter months it falls on the last day.</Text>}
+              <Stepper
+                before="On day"
+                after="of the month"
+                value={r.dom}
+                max={31}
+                onChange={(dom) => setRule({ ...r, dom })}
+              />
+              {r.dom > 28 && (
+                <Text style={[styles.hint, { color: c.muted }]}>In shorter months it falls on the last day.</Text>
+              )}
             </>
           )}
         </>
@@ -101,10 +112,14 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
 
           <Text style={[label, styles.gapTop]}>Ends</Text>
           <View style={styles.chips}>
-            <Pressable onPress={() => set({ endDate: undefined })} style={chip(!item.endDate)}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => set({ endDate: undefined })}
+              style={chip(!item.endDate)}>
               <Text style={chipText(!item.endDate)}>Never</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               onPress={() => !item.endDate && set({ endDate: addDaysStr(item.startDate ?? today, 30) })}
               style={chip(!!item.endDate)}>
               <Text style={chipText(!!item.endDate)}>On a date</Text>
@@ -114,7 +129,9 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
             <>
               <DateField value={item.endDate} onChange={(d) => set({ endDate: d })} placeholder="End date" />
               {item.startDate && item.endDate < item.startDate ? (
-                <Text style={[styles.hint, { color: c.warn }]}>The end date is before the start date, so this won’t show up.</Text>
+                <Text style={[styles.hint, { color: c.warn }]}>
+                  The end date is before the start date, so this won’t show up.
+                </Text>
               ) : (
                 <Text style={[styles.hint, { color: c.muted }]}>Last day it shows up: {prettyDate(item.endDate)}.</Text>
               )}
@@ -145,7 +162,8 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
               : 'A missed day disappears and the streak resets.'}
           </Text>
           <Text style={[styles.hint, { color: c.muted }]}>
-            Current streak: <Text style={{ fontWeight: '700', color: c.ink }}>{streak(item, today, completions[item.id] ?? {})}</Text>
+            Current streak:{' '}
+            <Text style={{ fontWeight: '700', color: c.ink }}>{streak(item, today, completions[item.id] ?? {})}</Text>
           </Text>
         </>
       )}
@@ -153,14 +171,27 @@ export function RepeatEditor({ item, today, completions, set }: Props) {
   );
 }
 
-function Stepper({ before, after, value, max = 365, onChange }: { before: string; after: string; value: number; max?: number; onChange: (n: number) => void }) {
+function Stepper({
+  before,
+  after,
+  value,
+  max = 365,
+  onChange,
+}: {
+  before: string;
+  after: string;
+  value: number;
+  max?: number;
+  onChange: (n: number) => void;
+}) {
   const c = usePalette();
   const btn = (label: string, next: number, disabled: boolean) => (
     <Pressable
+      accessibilityRole="button"
       onPress={() => onChange(next)}
       disabled={disabled}
       hitSlop={6}
-      accessibilityLabel={label === '−' ? 'Fewer' : 'More'}
+      accessibilityLabel={`${label === '−' ? 'Decrease' : 'Increase'} ${before.toLowerCase()}${after ? ` ${after}` : ''}, currently ${value}`}
       style={[styles.stepBtn, { borderColor: c.line, backgroundColor: c.bg }, disabled && { opacity: 0.35 }]}>
       <Text style={{ color: c.ink, fontSize: 16 }}>{label}</Text>
     </Pressable>
@@ -169,7 +200,9 @@ function Stepper({ before, after, value, max = 365, onChange }: { before: string
     <View style={styles.stepper}>
       <Text style={{ color: c.ink }}>{before}</Text>
       {btn('−', value - 1, value <= 1)}
-      <Text style={[styles.stepVal, { color: c.ink }]}>{value}</Text>
+      <Text style={[styles.stepVal, { color: c.ink }]} aria-live="polite">
+        {value}
+      </Text>
       {btn('+', value + 1, value >= max)}
       {!!after && <Text style={{ color: c.ink }}>{after}</Text>}
     </View>

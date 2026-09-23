@@ -7,6 +7,7 @@ import { DueButton, PlanButton } from '@/components/due-button';
 import { ProgressCircle } from '@/components/progress-circle';
 import { ProgressMenu, type PointAnchor } from '@/components/progress-menu';
 import { usePalette } from '@/constants/tally';
+import { justDragged } from '@/lib/drag';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
 import { planLabel, plansOf } from '@/lib/plan';
@@ -29,17 +30,30 @@ type Props = {
   onMyDay: () => void;
   onDue: (due: DateStr | undefined) => void;
   onPlan: (days: DateStr[]) => void;
-  onDelete: () => void;
   onRename: (title: string) => void;
   /** Manual partial progress (1–99), or undefined to clear. */
   onProgress: (pct: number | undefined) => void;
   onToggleStep: (stepId: string) => void;
-  /** Drag grip shown before the checkbox (Plan view). */
-  handle?: React.ReactNode;
 };
 
 export function TaskRow(props: Props) {
-  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onProgress, onToggleStep, handle } = props;
+  const {
+    row,
+    done,
+    today,
+    completions,
+    progress,
+    list,
+    selected,
+    onPress,
+    onToggle,
+    onMyDay,
+    onDue,
+    onPlan,
+    onRename,
+    onProgress,
+    onToggleStep,
+  } = props;
   const [menu, setMenu] = useState<PointAnchor | null>(null);
   const openMenu = (x: number, y: number) => setMenu({ x, y });
   const [editing, setEditing] = useState(false);
@@ -86,14 +100,26 @@ export function TaskRow(props: Props) {
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => !justDragged() && onPress()}
       accessibilityRole="button"
-      accessibilityHint="Opens task details"
+      accessibilityLabel={[
+        item.title,
+        done ? 'done' : '',
+        ...meta.map((m) => m.text),
+        st >= 2 ? `${st}-day streak` : '',
+      ]
+        .filter(Boolean)
+        .join(', ')}
+      accessibilityHint="Opens task details. Drag to move it."
+      accessibilityState={{ selected }}
       style={[
         styles.row,
-        { backgroundColor: row.late && !done ? c.warnSoft : c.panel, shadowColor: c.ink, borderColor: selected ? c.accent : 'transparent' },
+        {
+          backgroundColor: row.late && !done ? c.warnSoft : c.panel,
+          shadowColor: c.ink,
+          borderColor: selected ? c.accent : 'transparent',
+        },
       ]}>
-      {handle}
       <Pressable
         onPress={onToggle}
         disabled={disabled}
@@ -106,7 +132,9 @@ export function TaskRow(props: Props) {
           },
         })}
         accessibilityRole="checkbox"
-        accessibilityState={{ checked: done, disabled }}
+        accessibilityLabel={`Done: ${item.title}`}
+        accessibilityHint={item.rule ? undefined : 'Right-click or long-press to mark it partly done'}
+        accessibilityState={{ checked: done ? true : fraction > 0 ? 'mixed' : false, disabled }}
         accessibilityValue={fraction > 0 && fraction < 1 ? { text: `${Math.round(fraction * 100)}% done` } : undefined}
         hitSlop={8}
         style={[styles.chk, disabled && { opacity: 0.35 }]}>
@@ -134,7 +162,7 @@ export function TaskRow(props: Props) {
               setEditing(true);
             }}
             accessibilityRole="button"
-            accessibilityHint="Edit the title"
+            accessibilityLabel={`Rename ${item.title}`}
             style={styles.titleHit}>
             <Text style={[styles.title, { color: done ? c.muted : c.ink }, done && styles.strike]}>{item.title}</Text>
           </Pressable>
@@ -160,12 +188,19 @@ export function TaskRow(props: Props) {
                   disabled={disabled}
                   hitSlop={4}
                   accessibilityRole="checkbox"
+                  accessibilityLabel={`Step: ${st.title}`}
                   accessibilityState={{ checked: on, disabled }}
                   style={[styles.step, disabled && { opacity: 0.5 }]}>
-                  <View style={[styles.stepBox, { borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent' }]}>
+                  <View
+                    style={[
+                      styles.stepBox,
+                      { borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent' },
+                    ]}>
                     {on && <Text style={styles.stepTick}>✓</Text>}
                   </View>
-                  <Text style={[styles.stepText, { color: on ? c.muted : c.ink }, on && styles.strike]}>{st.title}</Text>
+                  <Text style={[styles.stepText, { color: on ? c.muted : c.ink }, on && styles.strike]}>
+                    {st.title}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -173,32 +208,26 @@ export function TaskRow(props: Props) {
         )}
       </View>
       {st >= 2 && (
-        <Text style={[styles.streak, { backgroundColor: c.flameSoft, color: c.flame }]} accessibilityLabel={`${st}-day streak`}>
+        <Text
+          style={[styles.streak, { backgroundColor: c.flameSoft, color: c.flame }]}
+          accessibilityLabel={`${st}-day streak`}>
           🔥 {st}
         </Text>
       )}
       {!item.rule && (
         <>
-          <PlanButton days={plansOf(item)} onChange={onPlan} />
-          <DueButton value={item.due} onChange={onDue} />
+          <PlanButton days={plansOf(item)} onChange={onPlan} task={item.title} />
+          <DueButton value={item.due} onChange={onDue} task={item.title} />
           <Pressable
             onPress={onMyDay}
             hitSlop={8}
             accessibilityRole="switch"
             accessibilityState={{ checked: inMyDay }}
-            accessibilityLabel={inMyDay ? 'Remove from My Day' : 'Add to My Day'}>
+            accessibilityLabel={`In My Day: ${item.title}`}>
             <Ionicons name={inMyDay ? 'sunny' : 'sunny-outline'} size={19} color={inMyDay ? c.flame : c.muted} />
           </Pressable>
         </>
       )}
-      <Pressable
-        onPress={onDelete}
-        hitSlop={8}
-        accessibilityLabel={`Delete ${item.title}`}
-        accessibilityRole="button"
-        style={({ hovered }) => [styles.del, hovered && { backgroundColor: c.warnSoft }]}>
-        {({ hovered }) => <Text style={{ fontSize: 18, lineHeight: 20, color: hovered ? c.warn : c.muted }}>×</Text>}
-      </Pressable>
     </Pressable>
   );
 }
@@ -230,6 +259,12 @@ const styles = StyleSheet.create({
   stepTick: { color: '#fff', fontSize: 10, fontWeight: '700' },
   stepText: { fontSize: 13.5 },
   meta: { fontSize: 12.5, marginTop: 2 },
-  streak: { fontSize: 12, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', fontVariant: ['tabular-nums'] },
-  del: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  streak: {
+    fontSize: 12,
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: 'hidden',
+    fontVariant: ['tabular-nums'],
+  },
 });

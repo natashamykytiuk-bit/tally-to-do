@@ -30,11 +30,14 @@ export function ListMenu({
   );
   return (
     <Modal visible={!!anchor} transparent animationType="none" onRequestClose={onClose}>
-      <Pressable style={styles.fill} onPress={onClose} accessibilityLabel="Close menu" />
+      <Pressable accessibilityRole="button" style={styles.fill} onPress={onClose} accessibilityLabel="Close menu" />
       {anchor && (
         <View
           accessibilityRole="menu"
-          style={[styles.menu, { left: anchor.x, top: anchor.y, backgroundColor: c.panel, borderColor: c.line, shadowColor: c.ink }]}>
+          style={[
+            styles.menu,
+            { left: anchor.x, top: anchor.y, backgroundColor: c.panel, borderColor: c.line, shadowColor: c.ink },
+          ]}>
           {item('Edit list…', c.ink, onEdit)}
           {item('Delete list…', c.warn, onDelete)}
         </View>

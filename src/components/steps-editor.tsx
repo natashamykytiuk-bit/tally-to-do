@@ -36,7 +36,11 @@ export function StepsEditor({ item }: { item: Item }) {
               hitSlop={6}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: on, disabled: !canTick }}
-              style={[styles.box, { borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent' }, !canTick && { opacity: 0.4 }]}>
+              style={[
+                styles.box,
+                { borderColor: on ? c.accent : c.muted, backgroundColor: on ? c.accent : 'transparent' },
+                !canTick && { opacity: 0.4 },
+              ]}>
               {on && <Text style={styles.tick}>✓</Text>}
             </Pressable>
             <StepTitle
@@ -44,7 +48,11 @@ export function StepsEditor({ item }: { item: Item }) {
               done={on}
               onSave={(t) => (t ? renameStep(item, st.id, t) : removeStep(item, st.id))}
             />
-            <Pressable onPress={() => removeStep(item, st.id)} hitSlop={8} accessibilityLabel={`Remove step ${st.title}`}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => removeStep(item, st.id)}
+              hitSlop={8}
+              accessibilityLabel={`Remove step ${st.title}`}>
               <Text style={{ color: c.muted, fontSize: 16 }}>×</Text>
             </Pressable>
           </View>
@@ -53,6 +61,7 @@ export function StepsEditor({ item }: { item: Item }) {
       <View style={styles.row}>
         <Text style={{ color: c.accent, fontSize: 16, width: 18, textAlign: 'center' }}>+</Text>
         <TextInput
+          accessibilityLabel={steps.length ? 'Next step' : 'Add a step'}
           value={draft}
           onChangeText={setDraft}
           onSubmitEditing={add}
@@ -64,7 +73,8 @@ export function StepsEditor({ item }: { item: Item }) {
       </View>
       {item.rule && steps.length > 0 && (
         <Text style={[styles.hint, { color: c.muted }]}>
-          {date ? 'Steps reset for each occurrence.' : 'Not scheduled today, so steps can’t be ticked here.'} Ticking the last step checks off the task.
+          {date ? 'Steps reset for each occurrence.' : 'Not scheduled today, so steps can’t be ticked here.'} Ticking
+          the last step checks off the task.
         </Text>
       )}
     </>

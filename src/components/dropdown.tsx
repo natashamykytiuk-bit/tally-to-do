@@ -33,7 +33,9 @@ export function Dropdown<T extends string>({
         <Text style={{ color: c.muted, fontSize: 11 }}>{open ? '▲' : '▼'}</Text>
       </Pressable>
       {open && (
-        <View style={[styles.menu, { backgroundColor: c.panel, borderColor: c.line, shadowColor: c.ink }]} accessibilityRole="menu">
+        <View
+          style={[styles.menu, { backgroundColor: c.panel, borderColor: c.line, shadowColor: c.ink }]}
+          accessibilityRole="menu">
           {options.map((o) => {
             const on = o.value === value;
             return (
@@ -46,7 +48,9 @@ export function Dropdown<T extends string>({
                 accessibilityRole="menuitem"
                 accessibilityState={{ selected: on }}
                 style={({ hovered }) => [styles.item, (on || hovered) && { backgroundColor: c.accentSoft }]}>
-                <Text style={{ color: on ? c.accent : c.ink, fontWeight: on ? '600' : '400', fontSize: 14 }}>{o.label}</Text>
+                <Text style={{ color: on ? c.accent : c.ink, fontWeight: on ? '600' : '400', fontSize: 14 }}>
+                  {o.label}
+                </Text>
               </Pressable>
             );
           })}

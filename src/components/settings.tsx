@@ -14,7 +14,15 @@ import { usePrefs, type ThemeMode } from '@/providers/prefs';
 type Panel = 'main' | 'password' | 'delete' | 'import';
 
 /** Account management and appearance. Opened from the bottom of the sidebar. */
-export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClose: () => void; onReplayTour: () => void }) {
+export function Settings({
+  open,
+  onClose,
+  onReplayTour,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onReplayTour: () => void;
+}) {
   const c = usePalette();
   const [panel, setPanel] = useState<Panel>('main');
   const close = () => {
@@ -26,8 +34,13 @@ export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClo
     <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
       {/* Modals render outside the app root, so the colour wheel needs its own gesture root. */}
       <GestureHandlerRootView style={styles.center}>
-        <Pressable style={styles.scrim} onPress={close} accessibilityLabel="Close settings" />
-        <View style={[styles.card, { backgroundColor: c.panel }]}>
+        <Pressable
+          accessibilityRole="button"
+          style={styles.scrim}
+          onPress={close}
+          accessibilityLabel="Close settings"
+        />
+        <View style={[styles.card, { backgroundColor: c.panel }]} role="dialog" aria-modal aria-label="Settings">
           <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
             {panel === 'main' && (
               <Main
@@ -49,7 +62,15 @@ export function Settings({ open, onClose, onReplayTour }: { open: boolean; onClo
   );
 }
 
-function Main({ onPanel, onClose, onReplayTour }: { onPanel: (p: Panel) => void; onClose: () => void; onReplayTour: () => void }) {
+function Main({
+  onPanel,
+  onClose,
+  onReplayTour,
+}: {
+  onPanel: (p: Panel) => void;
+  onClose: () => void;
+  onReplayTour: () => void;
+}) {
   const c = usePalette();
   const { user } = useAuth();
   const { prefs, setPrefs } = usePrefs();
@@ -92,7 +113,7 @@ function Main({ onPanel, onClose, onReplayTour }: { onPanel: (p: Panel) => void;
         <View style={[styles.row, { justifyContent: 'space-between' }]}>
           <Text style={{ color: c.muted, fontSize: 13 }}>Accent colour</Text>
           {prefs.accent && (
-            <Pressable onPress={() => setPrefs({ accent: '' })} hitSlop={8}>
+            <Pressable accessibilityRole="button" onPress={() => setPrefs({ accent: '' })} hitSlop={8}>
               <Text style={{ color: c.accent, fontSize: 13 }}>Reset to default</Text>
             </Pressable>
           )}
@@ -117,7 +138,7 @@ function Main({ onPanel, onClose, onReplayTour }: { onPanel: (p: Panel) => void;
         <Btn label="Delete account…" danger onPress={() => onPanel('delete')} />
       </Section>
 
-      <Pressable onPress={onClose} style={[styles.primary, { backgroundColor: c.accent }]}>
+      <Pressable accessibilityRole="button" onPress={onClose} style={[styles.primary, { backgroundColor: c.accent }]}>
         <Text style={{ color: '#fff', fontWeight: '600' }}>Done</Text>
       </Pressable>
     </>
@@ -150,14 +171,29 @@ function PasswordForm({ onBack }: { onBack: () => void }) {
         <Text style={{ color: c.ink }}>Your password has been changed.</Text>
       ) : (
         <>
-          <Field label="Current password" value={current} onChange={setCurrent} secure autoComplete="current-password" />
+          <Field
+            label="Current password"
+            value={current}
+            onChange={setCurrent}
+            secure
+            autoComplete="current-password"
+          />
           <Field label="New password" value={next} onChange={setNext} secure autoComplete="new-password" />
           {status.error && <Text style={{ color: c.warn }}>{status.error}</Text>}
           <Pressable
+            accessibilityRole="button"
             onPress={submit}
             disabled={status.busy || !current || !next}
-            style={[styles.primary, { backgroundColor: c.accent }, (status.busy || !current || !next) && { opacity: 0.5 }]}>
-            {status.busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Change password</Text>}
+            style={[
+              styles.primary,
+              { backgroundColor: c.accent },
+              (status.busy || !current || !next) && { opacity: 0.5 },
+            ]}>
+            {status.busy ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: '#fff', fontWeight: '600' }}>Change password</Text>
+            )}
           </Pressable>
         </>
       )}
@@ -194,10 +230,15 @@ function DeleteForm({ onBack }: { onBack: () => void }) {
       <Field label="Type DELETE to confirm" value={confirm} onChange={setConfirm} />
       {status.error && <Text style={{ color: c.warn }}>{status.error}</Text>}
       <Pressable
+        accessibilityRole="button"
         onPress={submit}
         disabled={!ready || status.busy}
         style={[styles.primary, { backgroundColor: c.warn }, (!ready || status.busy) && { opacity: 0.5 }]}>
-        {status.busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontWeight: '600' }}>Delete my account</Text>}
+        {status.busy ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Delete my account</Text>
+        )}
       </Pressable>
     </>
   );
@@ -207,7 +248,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   const c = usePalette();
   return (
     <View style={[styles.section, { backgroundColor: c.bg }]}>
-      <Text style={[styles.sectionTitle, { color: c.muted }]}>{title.toUpperCase()}</Text>
+      <Text style={[styles.sectionTitle, { color: c.muted }]} role="heading" aria-level={2} aria-label={title}>
+        {title.toUpperCase()}
+      </Text>
       {children}
     </View>
   );
@@ -216,7 +259,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Btn({ label, onPress, danger }: { label: string; onPress: () => void; danger?: boolean }) {
   const c = usePalette();
   return (
-    <Pressable onPress={onPress} style={[styles.btn, { backgroundColor: danger ? c.warnSoft : c.accentSoft }]}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.btn, { backgroundColor: danger ? c.warnSoft : c.accentSoft }]}>
       <Text style={{ color: danger ? c.warn : c.accent, fontWeight: '600', fontSize: 14 }}>{label}</Text>
     </Pressable>
   );
@@ -226,7 +272,7 @@ function BackHeader({ title, onBack }: { title: string; onBack: () => void }) {
   const c = usePalette();
   return (
     <View style={styles.row}>
-      <Pressable onPress={onBack} hitSlop={10} accessibilityLabel="Back">
+      <Pressable accessibilityRole="button" onPress={onBack} hitSlop={10} accessibilityLabel="Back">
         <Text style={{ color: c.accent, fontSize: 18 }}>‹</Text>
       </Pressable>
       <Text style={[styles.h, { color: c.ink }]}>{title}</Text>
@@ -260,7 +306,16 @@ function Field(props: {
 
 const styles = StyleSheet.create({
   // Absolute fill, not flex: 1 - react-native-web's Modal doesn't stretch its children.
-  center: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', padding: 16 },
+  center: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
   scrim: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(0,0,0,0.35)' },
   card: { width: '100%', maxWidth: 440, maxHeight: '92%', borderRadius: 14 },
   body: { padding: 18, gap: 12 },

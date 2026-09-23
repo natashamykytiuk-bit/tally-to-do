@@ -47,8 +47,13 @@ export function ColorField({ value, onChange }: { value: string; onChange: (hex:
           accessibilityLabel="Hex colour code"
           style={[styles.hex, { color: c.ink, borderColor: valid ? c.line : c.warn, backgroundColor: c.bg }]}
         />
-        <Pressable onPress={() => setWheel(!wheel)} style={[styles.wheelBtn, { backgroundColor: c.accentSoft }]}>
-          <Text style={{ color: c.accent, fontWeight: '600', fontSize: 13 }}>{wheel ? 'Hide wheel' : 'Colour wheel'}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => setWheel(!wheel)}
+          style={[styles.wheelBtn, { backgroundColor: c.accentSoft }]}>
+          <Text style={{ color: c.accent, fontWeight: '600', fontSize: 13 }}>
+            {wheel ? 'Hide wheel' : 'Colour wheel'}
+          </Text>
         </Pressable>
       </View>
       {!valid && <Text style={[styles.hint, { color: c.warn }]}>Use a hex code like #3354C4.</Text>}

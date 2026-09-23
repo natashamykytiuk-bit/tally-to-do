@@ -49,7 +49,7 @@ export function ProgressMenu({ anchor, current, onPick, onClose }: Props) {
         style={styles.layer}
         onStartShouldSetResponder={() => true}
         {...{ onClick: (e: { stopPropagation: () => void }) => e.stopPropagation() }}>
-        <Pressable style={styles.layer} onPress={onClose} accessibilityLabel="Close menu" />
+        <Pressable accessibilityRole="button" style={styles.layer} onPress={onClose} accessibilityLabel="Close menu" />
         {anchor && (
           <View
             accessibilityRole="menu"
@@ -73,10 +73,14 @@ export function ProgressMenu({ anchor, current, onPick, onClose }: Props) {
                   placeholder="1–99"
                   placeholderTextColor={c.muted}
                   accessibilityLabel="Custom percent"
-                  style={[styles.input, { color: c.ink, borderColor: custom && !customPct ? c.warn : c.line, backgroundColor: c.bg }]}
+                  style={[
+                    styles.input,
+                    { color: c.ink, borderColor: custom && !customPct ? c.warn : c.line, backgroundColor: c.bg },
+                  ]}
                 />
                 <Text style={{ color: c.muted }}>%</Text>
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => customPct && pick(customPct)}
                   disabled={!customPct}
                   style={[styles.set, { backgroundColor: c.accent }, !customPct && { opacity: 0.4 }]}>

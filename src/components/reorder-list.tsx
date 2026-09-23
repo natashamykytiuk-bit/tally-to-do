@@ -1,12 +1,11 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRef, useState, type ReactNode } from 'react';
 import { View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { GestureDetector } from 'react-native-gesture-handler';
 
-import { usePalette } from '@/constants/tally';
+import { markDragged, rowDrag } from '@/lib/drag';
 import { moveIndex, zoneAt, type Zone } from '@/lib/reorder';
 
-export type ReorderEntry = { key: string; label: string; render: (handle: ReactNode) => ReactNode };
+export type ReorderEntry = { key: string; render: () => ReactNode };
 
 type Props = {
   entries: ReorderEntry[];
@@ -15,9 +14,8 @@ type Props = {
   onDragging: (dragging: boolean) => void;
 };
 
-/** A column of rows that can be reordered by dragging each row's ≡ grip. Rows may have different heights. */
+/** A column of rows that can be reordered by dragging them. Rows may have different heights. */
 export function ReorderList({ entries, onReorder, onDragging }: Props) {
-  const c = usePalette();
   const keys = entries.map((e) => e.key);
   const views = useRef(new Map<string, View>());
   const zones = useRef<Zone[]>([]);
@@ -26,7 +24,12 @@ export function ReorderList({ entries, onReorder, onDragging }: Props) {
   dragRef.current = drag;
 
   const from = drag ? keys.indexOf(drag.key) : -1;
-  const to = drag ? Math.max(0, zones.current.findIndex((z) => z.key === drag.over)) : -1;
+  const to = drag
+    ? Math.max(
+        0,
+        zones.current.findIndex((z) => z.key === drag.over),
+      )
+    : -1;
   const shown = drag && from >= 0 ? moveIndex(keys, from, to) : keys;
 
   // Where the dragged row's slot has moved to, relative to where it started (rows can differ in height).
@@ -38,8 +41,7 @@ export function ReorderList({ entries, onReorder, onDragging }: Props) {
   };
 
   const gesture = (key: string) =>
-    Gesture.Pan()
-      .runOnJS(true)
+    rowDrag()
       .onStart(() => {
         // Measure every row, in the current order, before anything moves.
         const found: Zone[] = [];
@@ -53,8 +55,11 @@ export function ReorderList({ entries, onReorder, onDragging }: Props) {
         onDragging(true);
         setDrag({ key, dy: 0, over: key });
       })
-      .onUpdate((e) => setDrag((d) => d && { ...d, dy: e.translationY, over: zoneAt(zones.current, e.absoluteY) ?? d.over }))
+      .onUpdate((e) =>
+        setDrag((d) => d && { ...d, dy: e.translationY, over: zoneAt(zones.current, e.absoluteY) ?? d.over }),
+      )
       .onEnd(() => {
+        markDragged(); // only runs after a real drag, not a plain click
         const d = dragRef.current;
         if (!d) return;
         const a = keys.indexOf(d.key);
@@ -71,26 +76,17 @@ export function ReorderList({ entries, onReorder, onDragging }: Props) {
       {shown.map((key) => {
         const entry = entries.find((e) => e.key === key)!;
         const dragging = drag?.key === key;
-        const handle = (
-          <GestureDetector gesture={gesture(key)}>
+        return (
+          <GestureDetector key={key} gesture={gesture(key)}>
             <View
-              style={[{ paddingRight: 2, marginLeft: -6 }, { cursor: dragging ? 'grabbing' : 'grab' } as object]}
-              accessibilityLabel={`Drag to reorder ${entry.label}`}
-              hitSlop={8}>
-              <Ionicons name="reorder-two" size={18} color={c.muted} />
+              ref={(v) => {
+                if (v) views.current.set(key, v);
+                else views.current.delete(key);
+              }}
+              style={dragging && { transform: [{ translateY: drag.dy - slotOffset() }], zIndex: 20, opacity: 0.92 }}>
+              {entry.render()}
             </View>
           </GestureDetector>
-        );
-        return (
-          <View
-            key={key}
-            ref={(v) => {
-              if (v) views.current.set(key, v);
-              else views.current.delete(key);
-            }}
-            style={dragging && { transform: [{ translateY: drag.dy - slotOffset() }], zIndex: 20, opacity: 0.92 }}>
-            {entry.render(handle)}
-          </View>
         );
       })}
     </>

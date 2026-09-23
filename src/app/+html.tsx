@@ -15,7 +15,12 @@ export default function Root({ children }: PropsWithChildren) {
         {/* Stops the page itself scrolling on web so ScrollViews behave like native. */}
         <ScrollViewStyleReset />
         {/* Page background matches the app (no white flash); text boxes skip the browser's focus outline. */}
-        <style dangerouslySetInnerHTML={{ __html: 'body{background:#F3F5F9}@media (prefers-color-scheme:dark){body{background:#141821}}input:focus,textarea:focus{outline:none}' }} />
+        <style
+          dangerouslySetInnerHTML={{
+            __html:
+              'body{background:#F3F5F9}@media (prefers-color-scheme:dark){body{background:#141821}}input:focus,textarea:focus{outline:none}',
+          }}
+        />
       </head>
       <body>{children}</body>
     </html>

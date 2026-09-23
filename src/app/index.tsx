@@ -145,7 +145,12 @@ function TallyScreen() {
       {!wide && (
         <Modal visible={!!selected} transparent animationType="slide" onRequestClose={close}>
           <View style={styles.sheetWrap}>
-            <Pressable style={styles.scrim} onPress={close} accessibilityLabel="Close details" />
+            <Pressable
+              accessibilityRole="button"
+              style={styles.scrim}
+              onPress={close}
+              accessibilityLabel="Close details"
+            />
             <SafeAreaView style={[styles.sheet, { backgroundColor: c.side }]} edges={['bottom']}>
               {selected && <TaskDetail item={selected} onClose={close} />}
             </SafeAreaView>
@@ -158,7 +163,12 @@ function TallyScreen() {
             <SafeAreaView style={[styles.drawer, { backgroundColor: c.side }]} edges={['top', 'bottom', 'left']}>
               <Sidebar view={current} onSelect={select} onListMenu={openListMenu} onSettings={openSettings} />
             </SafeAreaView>
-            <Pressable style={styles.scrim} onPress={() => setDrawer(false)} accessibilityLabel="Close lists" />
+            <Pressable
+              accessibilityRole="button"
+              style={styles.scrim}
+              onPress={() => setDrawer(false)}
+              accessibilityLabel="Close lists"
+            />
           </GestureHandlerRootView>
         </Modal>
       )}
@@ -168,7 +178,11 @@ function TallyScreen() {
         onEdit={() => menu && setEditListId(menu.listId)}
         onDelete={() => menu && setDeleteListId(menu.listId)}
       />
-      <ListSettings list={listById(editListId)} onClose={() => setEditListId(null)} onDelete={(l) => setDeleteListId(l.id)} />
+      <ListSettings
+        list={listById(editListId)}
+        onClose={() => setEditListId(null)}
+        onDelete={(l) => setDeleteListId(l.id)}
+      />
       <Settings open={settings} onClose={() => setSettings(false)} onReplayTour={() => goToTourStep(0)} />
       {tourStep !== null && <Tour step={tourStep} onStep={goToTourStep} onDone={endTour} />}
       <DeleteListDialog
@@ -191,7 +205,7 @@ type MainProps = {
 
 function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const c = usePalette();
-  const { lists, items, today, completions, progress, addItem, updateItem, deleteItem, toggle, toggleStep } = useData();
+  const { lists, items, today, completions, progress, addItem, updateItem, toggle, toggleStep } = useData();
   const [showDone, setShowDone] = useState(true);
   const [dragging, setDragging] = useState(false);
   const { prefs, setPrefs } = usePrefs();
@@ -220,7 +234,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const open = rows.filter((r) => !finished(r));
   const done = rows.filter(finished);
 
-  const renderRow = (r: Row, handle?: React.ReactNode) => (
+  const renderRow = (r: Row) => (
     <TaskRow
       key={`${r.item.id}|${r.date ?? ''}`}
       row={r}
@@ -235,14 +249,9 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       onMyDay={() => updateItem(r.item.id, { myDay: r.item.myDay === today ? undefined : today })}
       onDue={(due) => updateItem(r.item.id, { due })}
       onPlan={(days) => updateItem(r.item.id, plansPatch(days))}
-      handle={handle}
       onRename={(title) => updateItem(r.item.id, { title })}
       onProgress={(progress) => updateItem(r.item.id, { progress })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
-      onDelete={() => {
-        if (selId === r.item.id) onOpen(r.item.id); // close its detail panel first
-        deleteItem(r.item.id);
-      }}
     />
   );
 
@@ -253,7 +262,9 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       if (!rs.length) return null;
       return (
         <View key={g} style={styles.gap}>
-          <Text style={[styles.group, { color: c.muted }]}>{g.toUpperCase()}</Text>
+          <Text style={[styles.group, { color: c.muted }]} role="heading" aria-level={2} aria-label={g}>
+            {g.toUpperCase()}
+          </Text>
           {rs.map((r) => renderRow(r))}
         </View>
       );
@@ -263,7 +274,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       <PlanBoard
         items={items}
         today={today}
-        renderRow={(item, handle) => renderRow({ item, date: null, late: false }, handle)}
+        renderRow={(item) => renderRow({ item, date: null, late: false })}
         onMove={(id, from, to) => {
           const item = items.find((i) => i.id === id);
           if (item) updateItem(id, plansPatch(movePlanDay(plansOf(item), from, to)));
@@ -272,7 +283,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       />
     );
   } else if (view === 'myday') {
-    // My Day: sorted by the chosen mode; drag ≡ to set your own order (switches the sort to "My order").
+    // My Day: sorted by the chosen mode; drag a task to set your own order (switches the sort to "My order").
     const keyOf = (r: Row) => `${r.item.id}|${r.date ?? ''}`;
     const sorted = sortRows(
       open.map((r) => ({
@@ -287,7 +298,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
     );
     body = (
       <ReorderList
-        entries={sorted.map((s) => ({ key: s.key, label: s.title, render: (handle) => renderRow(s.row, handle) }))}
+        entries={sorted.map((s) => ({ key: s.key, render: () => renderRow(s.row) }))}
         onReorder={(keys) => setPrefs({ mydaySort: 'custom', mydayOrder: keys })}
         onDragging={setDragging}
       />
@@ -308,20 +319,32 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
     // Clicking anywhere in the main area that isn't a task closes the open task's details.
     <Pressable
       style={[styles.mainWrap, { cursor: 'auto' } as object]}
+      role="main"
+      aria-label={title}
       accessible={false}
+      focusable={false}
+      tabIndex={-1}
       onPress={() => selId && onOpen(selId)}>
       <KeyboardAvoidingView style={[styles.fill, styles.main]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.head}>
           {onMenu && (
-            <Pressable onPress={onMenu} hitSlop={10} accessibilityLabel="Open lists" style={styles.menu}>
+            <Pressable
+              onPress={onMenu}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Open lists and views"
+              style={styles.menu}>
               <Text style={{ color: c.ink, fontSize: 22 }}>☰</Text>
             </Pressable>
           )}
           <View style={styles.fill}>
             <View style={styles.titleRow}>
-              <Text style={[styles.h1, { color: list?.color ?? c.ink }]}>{title}</Text>
+              <Text style={[styles.h1, { color: list?.color ?? c.ink }]} role="heading" aria-level={1}>
+                {title}
+              </Text>
               {list && (
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => onEditList(list.id)}
                   hitSlop={10}
                   accessibilityLabel="List settings"
@@ -335,7 +358,12 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
           {view === 'myday' && (
             <View style={styles.sort}>
               <Text style={{ color: c.muted, fontSize: 13 }}>Sort</Text>
-              <Dropdown label="Sort My Day" value={sortMode} options={SORT_MODES} onChange={(mydaySort) => setPrefs({ mydaySort })} />
+              <Dropdown
+                label="Sort My Day"
+                value={sortMode}
+                options={SORT_MODES}
+                onChange={(mydaySort) => setPrefs({ mydaySort })}
+              />
             </View>
           )}
         </View>
@@ -347,6 +375,8 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
             onSubmitEditing={add}
             submitBehavior="submit"
             placeholder={addsHabit ? 'Add a daily habit' : 'Add a task'}
+            accessibilityLabel={addsHabit ? 'New daily habit' : `New task in ${title}`}
+            accessibilityHint="Type a task and press Enter to add it"
             placeholderTextColor={c.muted}
             style={[styles.addInput, { color: c.ink }]}
           />
@@ -367,7 +397,11 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
               </Text>
             </Pressable>
           )}
-          <Pressable onPress={add} style={[styles.btn, { backgroundColor: c.accent }]}>
+          <Pressable
+            onPress={add}
+            style={[styles.btn, { backgroundColor: c.accent }]}
+            accessibilityRole="button"
+            accessibilityLabel={addsHabit ? 'Add habit' : 'Add task'}>
             <Text style={styles.btnText}>Add</Text>
           </Pressable>
         </View>
@@ -378,13 +412,17 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
           keyboardShouldPersistTaps="handled">
           {body}
           {!open.length && view !== 'plan' && (
-            <Text style={[styles.empty, { color: c.muted }]}>
+            <Text style={[styles.empty, { color: c.muted }]} role="status">
               {view === 'myday' ? 'All clear for today.' : 'Nothing here yet — add a task above.'}
             </Text>
           )}
           {done.length > 0 && (
             <>
-              <Pressable onPress={() => setShowDone(!showDone)} accessibilityRole="button">
+              <Pressable
+                onPress={() => setShowDone(!showDone)}
+                accessibilityRole="button"
+                accessibilityLabel={`Completed, ${done.length} ${done.length === 1 ? 'task' : 'tasks'}`}
+                accessibilityState={{ expanded: showDone }}>
                 <Text style={[styles.group, { color: c.muted }]}>
                   {showDone ? '▾' : '▸'} COMPLETED {done.length}
                 </Text>
@@ -393,7 +431,6 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
             </>
           )}
         </ScrollView>
-
       </KeyboardAvoidingView>
     </Pressable>
   );

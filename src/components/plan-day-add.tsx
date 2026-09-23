@@ -20,6 +20,7 @@ export function PlanDayAdd({ date }: { date: DateStr }) {
     <View style={[styles.row, { borderColor: c.line }]}>
       <Text style={{ color: c.accent, fontSize: 16 }}>+</Text>
       <TextInput
+        accessibilityLabel="Add a task for this day"
         value={draft}
         onChangeText={setDraft}
         onSubmitEditing={add}
