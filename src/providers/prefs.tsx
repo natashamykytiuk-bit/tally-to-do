@@ -2,11 +2,20 @@ import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { db } from '@/lib/firebase';
+import type { SortMode } from '@/lib/reorder';
 import { useAuth } from '@/providers/auth';
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 /** users/{uid}/meta/prefs */
-export type Prefs = { theme: ThemeMode; accent?: string; /** Finished or skipped the intro tour. */ tourDone?: boolean };
+export type Prefs = {
+  theme: ThemeMode;
+  accent?: string;
+  /** Finished or skipped the intro tour. */
+  tourDone?: boolean;
+  /** How My Day is sorted, and the dragged order (row keys) for 'custom'. */
+  mydaySort?: SortMode;
+  mydayOrder?: string[];
+};
 
 const DEFAULT: Prefs = { theme: 'system' };
 

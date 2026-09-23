@@ -1,4 +1,4 @@
-import { dropIndex, moveIndex, zoneAt } from '../reorder';
+import { dropIndex, moveIndex, sortRows, zoneAt } from '../reorder';
 
 test('moveIndex', () => {
   expect(moveIndex(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd']);
@@ -26,4 +26,21 @@ test('zoneAt finds the day under the pointer, or the nearest one', () => {
   expect(zoneAt(zones, 305)).toBe('2026-09-22'); // in the gap, closer to the one above
   expect(zoneAt(zones, 900)).toBe('2026-09-23');
   expect(zoneAt([], 10)).toBeNull();
+});
+
+describe('sortRows', () => {
+  const rows = [
+    { key: 'a', title: 'essay', due: '2026-09-30', created: 100 },
+    { key: 'b', title: 'Lab 10', due: '2026-09-24', created: 300 },
+    { key: 'c', title: 'lab 9', created: 200 },
+    { key: 'd', title: 'Buy stamps' },
+  ];
+  const keys = (rs: { key: string }[]) => rs.map((r) => r.key).join('');
+  test('due date: soonest first, undated last in incoming order', () => expect(keys(sortRows(rows, 'due'))).toBe('bacd'));
+  test('date created: newest first, unknown last', () => expect(keys(sortRows(rows, 'created'))).toBe('bcad'));
+  test('A to Z: ignores case, numbers in order', () => expect(keys(sortRows(rows, 'az'))).toBe('dacb'));
+  test('my order: saved keys first, new rows after', () => {
+    expect(keys(sortRows(rows, 'custom', ['c', 'a']))).toBe('cabd');
+    expect(keys(sortRows(rows, 'custom'))).toBe('abcd');
+  });
 });

@@ -14,7 +14,7 @@ export const TOUR: TourStep[] = [
   {
     icon: '☀',
     title: 'My Day',
-    body: 'Everything for today: tasks you’ve added to My Day, anything due or overdue, and habits scheduled for today.',
+    body: 'Everything for today: tasks you’ve added to My Day, anything due or overdue, and habits scheduled for today. Drag ≡ to put them in your own order, or use Sort for due date, date created or A to Z.',
     view: 'myday',
   },
   {

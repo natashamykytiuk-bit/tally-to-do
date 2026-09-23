@@ -22,13 +22,16 @@ import { ListSettings } from '@/components/list-settings';
 import { Settings } from '@/components/settings';
 import { Sidebar } from '@/components/sidebar';
 import { TaskDetail } from '@/components/task-detail';
+import { Dropdown } from '@/components/dropdown';
 import { PlanBoard } from '@/components/plan-board';
+import { ReorderList } from '@/components/reorder-list';
 import { TaskRow } from '@/components/task-row';
 import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { movePlanDay, plansOf, plansPatch } from '@/lib/plan';
 import { isDoneForToday } from '@/lib/progress';
+import { SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
 import {
   isRowDone,
   isSmartView,
@@ -191,6 +194,8 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const { lists, items, today, completions, progress, addItem, updateItem, deleteItem, toggle, toggleStep } = useData();
   const [showDone, setShowDone] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const { prefs, setPrefs } = usePrefs();
+  const sortMode: SortMode = prefs.mydaySort ?? 'custom';
   const [draft, setDraft] = useState('');
   const [repeat, setRepeat] = useState(false);
   // Habits always adds habits; Scheduled only shows dated one-offs, so a habit added there would vanish.
@@ -266,6 +271,27 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
         onDragging={setDragging}
       />
     );
+  } else if (view === 'myday') {
+    // My Day: sorted by the chosen mode; drag ≡ to set your own order (switches the sort to "My order").
+    const keyOf = (r: Row) => `${r.item.id}|${r.date ?? ''}`;
+    const sorted = sortRows(
+      open.map((r) => ({
+        row: r,
+        key: keyOf(r),
+        title: r.item.title,
+        due: r.item.due,
+        created: r.item.createdAt?.toMillis?.(),
+      })),
+      sortMode,
+      prefs.mydayOrder,
+    );
+    body = (
+      <ReorderList
+        entries={sorted.map((s) => ({ key: s.key, label: s.title, render: (handle) => renderRow(s.row, handle) }))}
+        onReorder={(keys) => setPrefs({ mydaySort: 'custom', mydayOrder: keys })}
+        onDragging={setDragging}
+      />
+    );
   } else body = open.map((r) => renderRow(r));
 
   const add = async () => {
@@ -306,6 +332,12 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
             </View>
             {!!subtitle && <Text style={{ color: c.muted, marginTop: 2 }}>{subtitle}</Text>}
           </View>
+          {view === 'myday' && (
+            <View style={styles.sort}>
+              <Text style={{ color: c.muted, fontSize: 13 }}>Sort</Text>
+              <Dropdown label="Sort My Day" value={sortMode} options={SORT_MODES} onChange={(mydaySort) => setPrefs({ mydaySort })} />
+            </View>
+          )}
         </View>
 
         <View style={[styles.add, { backgroundColor: c.panel, shadowColor: c.ink }]}>
@@ -394,6 +426,7 @@ const styles = StyleSheet.create({
   },
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   menu: { paddingTop: 4 },
+  sort: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingTop: 6, zIndex: 30 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   edit: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   h1: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
