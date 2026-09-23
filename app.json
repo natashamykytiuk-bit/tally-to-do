@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "tally",
+    "name": "Tally",
     "slug": "tally",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -21,16 +21,25 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Tally",
+      "shortName": "Tally",
+      "description": "To-dos and habits, with streaks.",
+      "themeColor": "#3354C4",
+      "backgroundColor": "#F3F5F9"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F3F5F9",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 96,
+          "dark": {
+            "backgroundColor": "#141821",
+            "image": "./assets/images/splash-icon.png"
+          }
         }
       ],
       "@react-native-community/datetimepicker"

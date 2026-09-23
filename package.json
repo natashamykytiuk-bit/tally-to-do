@@ -48,7 +48,9 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:web": "expo export --platform web",
+    "deploy:web": "npm run build:web && firebase deploy --only hosting"
   },
   "private": true,
   "jest": {
