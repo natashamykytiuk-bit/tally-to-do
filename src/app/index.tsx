@@ -37,6 +37,7 @@ import {
   isRowDone,
   isSmartView,
   newItemDefaults,
+  PLANNED_GROUPS,
   plannedGroup,
   rowsFor,
   SMART_VIEWS,
@@ -274,7 +275,7 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
 
   let body: React.ReactNode;
   if (view === 'planned') {
-    body = (['Overdue', 'Today', 'Tomorrow', 'Later'] as const).map((g) => {
+    body = PLANNED_GROUPS.map((g) => {
       const rs = open.filter((r) => r.item.due && plannedGroup(r.item.due, today) === g);
       if (!rs.length) return null;
       return (

@@ -9,7 +9,7 @@ A to-do list and habit tracker in the style of Microsoft To Do. Put one-off task
 - **Smart views:**
   - **Plan:** choose one or more days to work on each task, and drag tasks between days.
   - **My Day:** today's tasks, habits due today and any carried-over misses.
-  - **Scheduled:** tasks with due dates, grouped Overdue, Today, Tomorrow and Later.
+  - **Scheduled:** tasks with due dates, grouped Overdue, Today, Tomorrow, Later this week, Next week and Later.
   - **Tasks:** everything that isn't in one of your lists (tasks added from My Day, Plan, Scheduled or Habits).
   - **Habits:** every recurring task, with its streak.
 - **Lists:** each list or class has its own colour, chosen from presets, a hex code or a colour wheel. Drag the ≡ handle to reorder lists. Right-click a list (long-press on a phone) to edit or delete it.

@@ -1,4 +1,4 @@
-import { addDaysStr } from './dates';
+import { addDaysStr, weekStart } from './dates';
 import { planOverdue, plannedToday, plansOf } from './plan';
 import { isDoneForToday } from './progress';
 import { occursOn, pendingMissed } from './recurrence';
@@ -80,12 +80,17 @@ export const openCount = (view: ViewId, items: Item[], today: DateStr, all: AllC
     (r) => !isRowDone(r, all) && !isDoneForToday(r.item, today) && !(r.item.rule && !r.date),
   ).length;
 
-export type PlannedGroup = 'Overdue' | 'Today' | 'Tomorrow' | 'Later';
+/** Scheduled view groups, in display order. Weeks run Sunday to Saturday. */
+export const PLANNED_GROUPS = ['Overdue', 'Today', 'Tomorrow', 'Later this week', 'Next week', 'Later'] as const;
+export type PlannedGroup = (typeof PLANNED_GROUPS)[number];
 
 export function plannedGroup(due: DateStr, today: DateStr): PlannedGroup {
   if (due < today) return 'Overdue';
   if (due === today) return 'Today';
   if (due === addDaysStr(today, 1)) return 'Tomorrow';
+  const nextSunday = addDaysStr(weekStart(today), 7);
+  if (due < nextSunday) return 'Later this week';
+  if (due < addDaysStr(nextSunday, 7)) return 'Next week';
   return 'Later';
 }
 

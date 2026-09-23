@@ -31,7 +31,14 @@ test('Planned groups', () => {
   expect(plannedGroup('2026-09-21', TUE)).toBe('Overdue');
   expect(plannedGroup(TUE, TUE)).toBe('Today');
   expect(plannedGroup('2026-09-23', TUE)).toBe('Tomorrow');
-  expect(plannedGroup('2026-09-24', TUE)).toBe('Later');
+  expect(plannedGroup('2026-09-24', TUE)).toBe('Later this week'); // Thu
+  expect(plannedGroup('2026-09-26', TUE)).toBe('Later this week'); // Sat
+  expect(plannedGroup('2026-09-27', TUE)).toBe('Next week'); // Sun
+  expect(plannedGroup('2026-10-03', TUE)).toBe('Next week'); // Sat
+  expect(plannedGroup('2026-10-04', TUE)).toBe('Later');
+  // Saturday: tomorrow is already next week.
+  expect(plannedGroup('2026-09-27', '2026-09-26')).toBe('Tomorrow');
+  expect(plannedGroup('2026-09-28', '2026-09-26')).toBe('Next week');
   expect(ids(rowsFor('planned', items, TUE, comps)).sort()).toEqual(['lab', 'ps1', 'read']);
 });
 
