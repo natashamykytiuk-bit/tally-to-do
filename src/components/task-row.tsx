@@ -7,6 +7,7 @@ import { DueButton, PlanButton } from '@/components/due-button';
 import { usePalette } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
+import { planLabel, plansOf } from '@/lib/plan';
 import { isStepDone, stepCount, type AllProgress } from '@/lib/steps';
 import type { DateStr, List } from '@/lib/types';
 import type { AllCompletions, Row } from '@/lib/views';
@@ -24,14 +25,16 @@ type Props = {
   onToggle: () => void;
   onMyDay: () => void;
   onDue: (due: DateStr | undefined) => void;
-  onPlan: (plan: DateStr | undefined) => void;
+  onPlan: (days: DateStr[]) => void;
   onDelete: () => void;
   onRename: (title: string) => void;
   onToggleStep: (stepId: string) => void;
+  /** Drag grip shown before the checkbox (Plan view). */
+  handle?: React.ReactNode;
 };
 
 export function TaskRow(props: Props) {
-  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onToggleStep } = props;
+  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onToggleStep, handle } = props;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(props.row.item.title);
   // Escape unmounts the input, which fires onBlur; this stops that blur from saving.
@@ -62,11 +65,8 @@ export function TaskRow(props: Props) {
   if (row.late && row.date) meta.push({ text: `Missed ${prettyDate(row.date)}`, warn: true });
   if (item.rule) meta.push({ text: `↻ ${scheduleText(item)}` });
   if (disabled) meta.push({ text: 'Not scheduled today' });
-  if (!item.rule && item.plan && !item.done) {
-    const late = item.plan < today;
-    const when = item.plan === today ? 'today' : prettyDate(item.plan);
-    meta.push({ text: late ? `Planned ${when}` : `Work on ${when}`, warn: late });
-  }
+  const plan = item.rule ? null : planLabel(item, today);
+  if (plan) meta.push(plan);
   if (!item.rule && item.due) {
     const overdue = item.due < today && !item.done;
     const when = item.due === today ? 'today' : prettyDate(item.due);
@@ -82,6 +82,7 @@ export function TaskRow(props: Props) {
         styles.row,
         { backgroundColor: row.late && !done ? c.warnSoft : c.panel, shadowColor: c.ink, borderColor: selected ? c.accent : 'transparent' },
       ]}>
+      {handle}
       <Pressable
         onPress={onToggle}
         disabled={disabled}
@@ -161,7 +162,7 @@ export function TaskRow(props: Props) {
       )}
       {!item.rule && (
         <>
-          <PlanButton value={item.plan} onChange={onPlan} />
+          <PlanButton days={plansOf(item)} onChange={onPlan} />
           <DueButton value={item.due} onChange={onDue} />
           <Pressable
             onPress={onMyDay}

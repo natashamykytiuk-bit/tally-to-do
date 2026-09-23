@@ -48,7 +48,7 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
 
   const run = async (sheet: ParsedSheet) => {
     setState({ stage: 'importing' });
-    const r = await importTasks(sheet.tasks, lists[0].id);
+    const r = await importTasks(sheet.tasks);
     setState({ stage: 'done', ...r });
   };
 
@@ -104,7 +104,6 @@ export function ImportPanel({ onBack }: { onBack: () => void }) {
           fileName={state.fileName}
           sheet={state.sheet}
           newLists={newListNames(state.sheet.tasks, lists)}
-          fallback={lists[0]?.name ?? 'Tasks'}
           onCancel={() => setState({ stage: 'pick' })}
           onImport={() => run(state.sheet)}
         />
@@ -127,7 +126,6 @@ function Preview(props: {
   fileName: string;
   sheet: ParsedSheet;
   newLists: string[];
-  fallback: string;
   onCancel: () => void;
   onImport: () => void;
 }) {
@@ -152,7 +150,7 @@ function Preview(props: {
       )}
       {unlisted > 0 && (
         <Text style={[styles.small, { color: c.muted }]}>
-          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no list and will go into “{props.fallback}”.
+          {unlisted} {unlisted === 1 ? 'task has' : 'tasks have'} no class, so {unlisted === 1 ? 'it goes' : 'they go'} under “No list”.
         </Text>
       )}
       {sheet.skipped > 0 && (

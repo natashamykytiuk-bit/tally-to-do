@@ -6,6 +6,7 @@ import { RepeatEditor } from '@/components/repeat-editor';
 import { StepsEditor } from '@/components/steps-editor';
 import { usePalette } from '@/constants/tally';
 import { addDaysStr, dow, prettyDate } from '@/lib/dates';
+import { plansOf, plansPatch, togglePlanDay } from '@/lib/plan';
 import type { Item } from '@/lib/types';
 import { useData } from '@/providers/data';
 
@@ -61,6 +62,9 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
       <View style={card}>
         <Text style={label}>List</Text>
         <View style={styles.chips}>
+          <Pressable onPress={() => set({ listId: undefined })} style={chip(!item.listId)}>
+            <Text style={chipText(!item.listId)}>No list</Text>
+          </Pressable>
           {lists.map((l) => (
             <Pressable key={l.id} onPress={() => set({ listId: l.id })} style={chip(l.id === item.listId)}>
               <View style={[styles.dot, { backgroundColor: l.id === item.listId ? '#fff' : l.color }]} />
@@ -100,23 +104,33 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           </View>
           {item.due && (
             <Text style={[styles.hint, { color: c.muted }]}>
-              Due {item.due === today ? 'today' : prettyDate(item.due)}. Shows in Planned, and in My Day once it’s due.
+              Due {item.due === today ? 'today' : prettyDate(item.due)}. Shows in Scheduled, and in My Day once it’s due.
             </Text>
           )}
 
           <Text style={[label, { marginTop: 6 }]}>Work on</Text>
-          <View style={styles.row}>
-            <DateField value={item.plan} onChange={(d) => set({ plan: d })} placeholder="Plan a day" />
-            {item.plan && (
-              <Pressable onPress={() => set({ plan: undefined })} hitSlop={8}>
-                <Text style={{ color: c.warn }}>Remove</Text>
-              </Pressable>
-            )}
+          <View style={styles.chips}>
+            {plansOf(item).map((d) => (
+              <View key={d} style={[styles.chip, { borderColor: c.accent, backgroundColor: c.accentSoft }]}>
+                <Text style={{ color: c.ink, fontSize: 13 }}>{d === today ? 'Today' : prettyDate(d)}</Text>
+                <Pressable
+                  onPress={() => set(plansPatch(togglePlanDay(plansOf(item), d)))}
+                  hitSlop={8}
+                  accessibilityLabel={`Remove ${prettyDate(d)}`}>
+                  <Text style={{ color: c.muted, fontSize: 15 }}>×</Text>
+                </Pressable>
+              </View>
+            ))}
+            <DateField
+              key={plansOf(item).join()}
+              onChange={(d) => set(plansPatch(togglePlanDay(plansOf(item), d)))}
+              placeholder={plansOf(item).length ? 'Add a day' : 'Plan a day'}
+            />
           </View>
           <Text style={[styles.hint, { color: c.muted }]}>
-            {item.plan
-              ? `Shows in My Day on ${item.plan === today ? 'today' : prettyDate(item.plan)} and stays until it’s done.`
-              : 'Pick a day to work on it before it’s due. It’ll show in My Day and in Plan.'}
+            {plansOf(item).length
+              ? 'Shows in My Day on each of these days, and stays until it’s done.'
+              : 'Pick one or more days to work on it before it’s due. They show in My Day and in Plan.'}
           </Text>
         </View>
       )}

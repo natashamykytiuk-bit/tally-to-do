@@ -15,7 +15,7 @@ function DateIconButton({
   icon,
   title,
   label,
-}: Props & { icon: 'calendar' | 'time'; title: string; label: string }) {
+}: Props & { icon: 'calendar'; title: string; label: string }) {
   const c = usePalette();
   const [anchor, setAnchor] = useState<Anchor | null>(null);
   const ref = useRef<View>(null);
@@ -47,5 +47,31 @@ function DateIconButton({
 /** 📅 Due date. */
 export const DueButton = (p: Props) => <DateIconButton {...p} icon="calendar" title="Due date" label="due date" />;
 
-/** 🕒 The day to work on it (Plan). */
-export const PlanButton = (p: Props) => <DateIconButton {...p} icon="time" title="Work on" label="work-on day" />;
+/** 🕒 The days to work on it (Plan). Pick as many as you like. */
+export function PlanButton({ days, onChange }: { days: DateStr[]; onChange: (days: DateStr[]) => void }) {
+  const c = usePalette();
+  const [anchor, setAnchor] = useState<Anchor | null>(null);
+  const ref = useRef<View>(null);
+  const show = () => ref.current?.measureInWindow((x, y, width, height) => setAnchor({ x, y, width, height }));
+  return (
+    <>
+      <Pressable
+        ref={ref}
+        onPress={show}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityLabel={days.length ? 'Change work days' : 'Plan days to work on it'}>
+        <Ionicons name={days.length ? 'time' : 'time-outline'} size={18} color={days.length ? c.accent : c.muted} />
+      </Pressable>
+      <CalendarPopup
+        open={!!anchor}
+        anchor={anchor}
+        title="Work on (pick one or more days)"
+        quick
+        onPick={() => {}}
+        multiple={{ days, onDone: onChange }}
+        onClose={() => setAnchor(null)}
+      />
+    </>
+  );
+}

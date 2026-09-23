@@ -5,16 +5,16 @@ import { usePalette } from '@/constants/tally';
 import type { DateStr } from '@/lib/types';
 import { useData } from '@/providers/data';
 
-/** "+ Add for <day>" box under each day in the Plan view. New tasks go into the first list. */
+/** "+ Add for <day>" box under each day in the Plan view. New tasks have no list. */
 export function PlanDayAdd({ date }: { date: DateStr }) {
   const c = usePalette();
-  const { lists, addItem } = useData();
+  const { addItem } = useData();
   const [draft, setDraft] = useState('');
   const add = () => {
     const title = draft.trim();
-    if (!title || !lists[0]) return;
+    if (!title) return;
     setDraft('');
-    addItem({ title, listId: lists[0].id, plan: date });
+    addItem({ title, plans: [date] });
   };
   return (
     <View style={[styles.row, { borderColor: c.line }]}>

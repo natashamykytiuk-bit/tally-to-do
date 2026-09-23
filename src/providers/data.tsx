@@ -38,14 +38,14 @@ type Data = {
   updateList: (id: string, patch: Partial<Omit<List, 'id'>>) => Promise<void>;
   /**
    * Adds imported tasks. Lists are matched by name (ignoring case) and created if missing;
-   * tasks without a list go into `fallbackListId`. Returns how many tasks and lists were added.
+   * tasks without a list get no list. Returns how many tasks and lists were added.
    */
-  importTasks: (tasks: ImportedTask[], fallbackListId: string) => Promise<{ tasks: number; lists: number }>;
+  importTasks: (tasks: ImportedTask[]) => Promise<{ tasks: number; lists: number }>;
   /** Saves a new list order (ids top to bottom). */
   reorderLists: (ids: string[]) => Promise<void>;
   /** Deletes the list, its tasks, and their completions and step progress. */
   deleteList: (id: string) => Promise<void>;
-  addItem: (fields: Partial<Item> & { title: string; listId: string }) => Promise<string>;
+  addItem: (fields: Partial<Item> & { title: string }) => Promise<string>;
   updateItem: (id: string, patch: Partial<Item>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   /** One-off: toggles done. Recurring: toggles the completion for `date`. */
@@ -124,7 +124,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         return ref.id;
       },
       updateList: (id, patch) => updateDoc(doc(col('lists'), id), patch),
-      importTasks: async (tasks, fallbackListId) => {
+      importTasks: async (tasks) => {
         // Map each list name (lower-case) to its id, creating lists that don't exist yet.
         const byName = new Map(ls.map((l) => [l.name.trim().toLowerCase(), l.id]));
         const writes: [ReturnType<typeof doc>, object][] = [];
@@ -139,7 +139,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
           newLists++;
         }
         for (const t of tasks) {
-          const listId = (t.list && byName.get(t.list.trim().toLowerCase())) || fallbackListId;
+          const listId = t.list ? byName.get(t.list.trim().toLowerCase()) : undefined;
           writes.push([doc(col('items')), { title: t.title, listId, due: t.due, notes: t.notes, createdAt: serverTimestamp() }]);
         }
         // Firestore allows 500 writes per batch.

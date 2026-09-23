@@ -17,7 +17,8 @@ export type Step = { id: string; title: string; done?: boolean };
 
 export type Item = {
   id: string;
-  listId: string;
+  /** Missing when the task isn't in a list (added from My Day, Plan, Scheduled or Habits). */
+  listId?: string;
   title: string;
   notes?: string;
   /** Legacy (the Important list was removed); ignored. */
@@ -27,7 +28,9 @@ export type Item = {
   // one-off only
   due?: DateStr;
   myDay?: DateStr;
-  /** The day the user plans to work on it (one-off only). Shows in My Day from then until done. */
+  /** Days the user plans to work on it (one-off only). Use plansOf() to read. */
+  plans?: DateStr[];
+  /** Older single work day; still read by plansOf(), cleared on the next change. */
   plan?: DateStr;
   done?: boolean;
   completedAt?: Timestamp;

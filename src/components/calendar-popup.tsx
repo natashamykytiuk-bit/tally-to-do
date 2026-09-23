@@ -22,6 +22,8 @@ type Props = {
   quick?: boolean;
   /** Where the button that opened it is, in window coordinates. The calendar drops down beneath it. */
   anchor: Anchor | null;
+  /** Multi-select: tapping days toggles them; Done saves. `value`/`onPick` are ignored. */
+  multiple?: { days: DateStr[]; onDone: (days: DateStr[]) => void };
 };
 
 export type Anchor = { x: number; y: number; width: number; height: number };
@@ -43,18 +45,24 @@ function place(anchor: Anchor, size: { width: number; height: number }, win: { w
 }
 
 /** Tally's own month calendar, themed with the user's colours on every platform. */
-export function CalendarPopup({ open, title, value, onPick, onClear, onClose, quick, anchor }: Props) {
+export function CalendarPopup({ open, title, value, onPick, onClear, onClose, quick, anchor, multiple }: Props) {
   const c = usePalette();
   const { today } = useData();
   const [month, setMonth] = useState(monthStart(value ?? today));
   const win = useWindowDimensions();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const pos = anchor && size ? place(anchor, size, win) : null;
+  // Multi-select keeps its picks here until Done.
+  const [picked, setPicked] = useState<DateStr[]>([]);
   useEffect(() => {
-    if (open) setMonth(monthStart(value ?? today));
+    if (!open) return;
+    setMonth(monthStart(multiple?.days[0] ?? value ?? today));
+    if (multiple) setPicked(multiple.days);
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const isOn = (d: DateStr) => (multiple ? picked.includes(d) : d === value);
   const pick = (d: DateStr) => {
+    if (multiple) return setPicked((p) => (p.includes(d) ? p.filter((x) => x !== d) : [...p, d].sort()));
     onClose();
     onPick(d);
   };
@@ -98,7 +106,7 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
           {quick && (
             <View style={styles.quick}>
               {shortcuts.map(([name, d]) => {
-                const on = d === value;
+                const on = isOn(d);
                 return (
                   <Pressable
                     key={name}
@@ -128,7 +136,7 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
             <View key={wi} style={styles.week}>
               {week.map((d, di) => {
                 if (!d) return <View key={di} style={styles.cell} />;
-                const selected = d === value;
+                const selected = isOn(d);
                 const isToday = d === today;
                 return (
                   <Pressable
@@ -158,6 +166,26 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
             </View>
           ))}
 
+          {multiple ? (
+            <View style={styles.foot}>
+              <Text style={{ color: c.muted, fontSize: 12.5 }}>
+                {picked.length ? `${picked.length} ${picked.length === 1 ? 'day' : 'days'} picked` : 'Tap days to pick them'}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <Pressable onPress={onClose} hitSlop={6}>
+                  <Text style={{ color: c.muted, fontWeight: '600' }}>Cancel</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    onClose();
+                    multiple.onDone(picked);
+                  }}
+                  hitSlop={6}>
+                  <Text style={{ color: c.accent, fontWeight: '700' }}>Done</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
           <View style={styles.foot}>
             {onClear && value ? (
               <Pressable
@@ -175,6 +203,7 @@ export function CalendarPopup({ open, title, value, onPick, onClear, onClose, qu
               <Text style={{ color: c.accent, fontWeight: '600' }}>Cancel</Text>
             </Pressable>
           </View>
+          )}
         </View>
       </View>
     </Modal>

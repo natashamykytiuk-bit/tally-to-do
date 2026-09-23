@@ -54,17 +54,17 @@ test('isRowDone reads the occurrence date', () => {
 });
 
 test('adding from a view pre-fills context', () => {
-  expect(newItemDefaults('myday', TUE, 'l1')).toMatchObject({ listId: 'l1', myDay: TUE });
-  expect(newItemDefaults('planned', TUE, 'l1')).toMatchObject({ due: TUE });
-  expect(newItemDefaults('habits', TUE, 'l1')).toMatchObject({ rule: { type: 'daily' }, startDate: TUE, missed: 'skip' });
-  expect(newItemDefaults('cpen', TUE, 'l1')).toMatchObject({ listId: 'cpen' });
+  expect(newItemDefaults('myday', TUE)).toEqual({ myDay: TUE }); // no list
+  expect(newItemDefaults('planned', TUE)).toMatchObject({ due: TUE });
+  expect(newItemDefaults('habits', TUE)).toMatchObject({ rule: { type: 'daily' }, startDate: TUE, missed: 'skip' });
+  expect(newItemDefaults('cpen', TUE)).toMatchObject({ listId: 'cpen' });
 });
 
 test('repeat adds a daily habit to the current list', () => {
-  const it = newItemDefaults('cpen', TUE, 'l1', true);
+  const it = newItemDefaults('cpen', TUE, true);
   expect(it).toMatchObject({ listId: 'cpen', rule: { type: 'daily' }, startDate: TUE, missed: 'skip' });
-  expect(newItemDefaults('myday', TUE, 'l1', true)).not.toHaveProperty('myDay');
-  expect(newItemDefaults('planned', TUE, 'l1', true)).not.toHaveProperty('due');
+  expect(newItemDefaults('myday', TUE, true)).not.toHaveProperty('myDay');
+  expect(newItemDefaults('planned', TUE, true)).not.toHaveProperty('due');
 });
 
 describe('planning', () => {
@@ -98,7 +98,25 @@ describe('planning', () => {
     expect(unplannedSoon(plan, TUE).map((i) => i.id)).toEqual(['u2', 'u1']);
   });
 
-  test('adding from Plan plans it for today', () => {
-    expect(newItemDefaults('plan', TUE, 'l1')).toMatchObject({ plan: TUE });
+  test('multi-day tasks show under each of their days', () => {
+    const multi: Item[] = [{ id: 'm', listId: 'l', title: 'Big essay', plans: ['2026-09-22', '2026-09-24', '2026-10-03'] }];
+    const days = planDays(multi, TUE);
+    expect(days.filter((d) => d.items.length).map((d) => d.date)).toEqual(['2026-09-22', '2026-09-24', '2026-10-03']);
+    expect(ids(rowsFor('myday', multi, TUE, {}))).toEqual(['m']);
+    expect(ids(rowsFor('myday', multi, '2026-09-23', {}))).toEqual([]); // not a work day
   });
+
+  test('adding from Plan plans it for today', () => {
+    expect(newItemDefaults('plan', TUE)).toMatchObject({ plans: [TUE] });
+  });
+});
+
+test('No list shows tasks without a list; smart views add tasks with no list', () => {
+  const loose: Item[] = [
+    { id: 'a', title: 'Buy stamps' },
+    { id: 'b', listId: 'cpen', title: 'Lab' },
+    { id: 'c', title: 'Stretch', rule: { type: 'daily' }, startDate: '2026-09-01' },
+  ];
+  expect(ids(rowsFor('nolist', loose, TUE, {})).sort()).toEqual(['a', 'c@2026-09-22']);
+  for (const v of ['myday', 'plan', 'planned', 'habits', 'nolist']) expect(newItemDefaults(v, TUE).listId).toBeUndefined();
 });

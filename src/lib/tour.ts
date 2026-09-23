@@ -37,7 +37,7 @@ export const TOUR: TourStep[] = [
   },
   {
     icon: '▦',
-    title: 'Planned',
+    title: 'Scheduled',
     body: 'Every task with a due date, grouped into Overdue, Today, Tomorrow and Later.',
     view: 'planned',
   },
