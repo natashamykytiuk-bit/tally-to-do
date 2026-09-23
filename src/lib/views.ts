@@ -2,12 +2,13 @@ import { addDaysStr } from './dates';
 import { occursOn, pendingMissed } from './recurrence';
 import type { CompletionMap, DateStr, Item } from './types';
 
-export type SmartView = 'myday' | 'planned' | 'habits';
+export type SmartView = 'myday' | 'plan' | 'planned' | 'habits';
 /** A smart view or a list id. */
 export type ViewId = SmartView | string;
 
 export const SMART_VIEWS: { id: SmartView; icon: string; name: string }[] = [
   { id: 'myday', icon: '☀', name: 'My Day' },
+  { id: 'plan', icon: '✎', name: 'Plan' },
   { id: 'planned', icon: '▦', name: 'Planned' },
   { id: 'habits', icon: '↻', name: 'Habits' },
 ];
@@ -51,7 +52,9 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
     const one = (): Row => ({ item, date: null, late: false });
     if (view === 'myday') {
       if (item.rule) rows.push(...recurringRows(item, today, all));
-      else if (item.myDay === today || (item.due && item.due <= today && !item.done)) rows.push(one());
+      else if (item.myDay === today || (item.due && item.due <= today && !item.done) || (item.plan && item.plan <= today && !item.done))
+        rows.push(one());
+      else if (item.done && item.plan === today) rows.push(one());
       else if (item.done && item.due === today) rows.push(one());
     } else if (view === 'planned') {
       if (!item.rule && item.due) rows.push(one());
@@ -87,6 +90,27 @@ export function newItemDefaults(
   const base: Partial<Item> = { listId: isSmartView(view) ? fallbackListId : view };
   if (repeat) return { ...base, rule: { type: 'daily' }, startDate: today, missed: 'skip' };
   if (view === 'myday') base.myDay = today;
+  if (view === 'plan') base.plan = today;
   if (view === 'planned') base.due = today;
   return base;
+}
+
+/** Days shown in the Plan view: today and the next 6, plus any later day with planned work. */
+export function planDays(items: Item[], today: DateStr, span = 7): { date: DateStr; items: Item[] }[] {
+  const open = items.filter((i) => !i.rule && i.plan && !i.done);
+  const dates = new Set(Array.from({ length: span }, (_, k) => addDaysStr(today, k)));
+  for (const i of open) if (i.plan! > today) dates.add(i.plan!);
+  return [...dates].sort().map((date) => ({
+    date,
+    // Anything planned for a past day that isn't done yet rolls into today.
+    items: open.filter((i) => (date === today ? i.plan! <= today : i.plan === date)),
+  }));
+}
+
+/** Open one-off tasks due within `days` (or overdue) that have no work day planned yet, soonest first. */
+export function unplannedSoon(items: Item[], today: DateStr, days = 14): Item[] {
+  const limit = addDaysStr(today, days);
+  return items
+    .filter((i) => !i.rule && !i.done && !i.plan && i.due && i.due <= limit)
+    .sort((a, b) => a.due!.localeCompare(b.due!));
 }

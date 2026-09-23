@@ -22,12 +22,14 @@ import { ListSettings } from '@/components/list-settings';
 import { Settings } from '@/components/settings';
 import { Sidebar } from '@/components/sidebar';
 import { TaskDetail } from '@/components/task-detail';
+import { PlanDayAdd } from '@/components/plan-day-add';
 import { TaskRow } from '@/components/task-row';
 import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
-import { prettyDate } from '@/lib/dates';
+import { addDaysStr, prettyDate } from '@/lib/dates';
 import {
   isRowDone,
+  planDays,
   isSmartView,
   newItemDefaults,
   plannedGroup,
@@ -35,6 +37,7 @@ import {
   SMART_VIEWS,
   type Row,
   type ViewId,
+  unplannedSoon,
 } from '@/lib/views';
 import { shouldShowTour, TOUR } from '@/lib/tour';
 import { useAuth } from '@/providers/auth';
@@ -190,13 +193,20 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const [draft, setDraft] = useState('');
   const [repeat, setRepeat] = useState(false);
   // Habits always adds habits; Planned only shows dated one-offs, so a habit added there would vanish.
-  const canRepeat = view !== 'habits' && view !== 'planned';
+  // Plan only shows one-off tasks with a work day, so the same applies there.
+  const canRepeat = view !== 'habits' && view !== 'planned' && view !== 'plan';
   const addsHabit = view === 'habits' || (canRepeat && repeat);
 
   const list = lists.find((l) => l.id === view);
   const title = SMART_VIEWS.find((s) => s.id === view)?.name ?? list?.name ?? '';
   const subtitle =
-    view === 'myday' ? prettyDate(today) : view === 'habits' ? 'Everything that repeats, with current streaks' : '';
+    view === 'myday'
+      ? prettyDate(today)
+      : view === 'habits'
+        ? 'Everything that repeats, with current streaks'
+        : view === 'plan'
+          ? 'Choose days to work on things before they’re due'
+          : '';
 
   const rows = rowsFor(view, items, today, completions);
   const open = rows.filter((r) => !isRowDone(r, completions));
@@ -216,6 +226,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       onToggle={() => toggle(r.item, r.date)}
       onMyDay={() => updateItem(r.item.id, { myDay: r.item.myDay === today ? undefined : today })}
       onDue={(due) => updateItem(r.item.id, { due })}
+      onPlan={(plan) => updateItem(r.item.id, { plan })}
       onRename={(title) => updateItem(r.item.id, { title })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
       onDelete={() => {
@@ -237,6 +248,29 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
         </View>
       );
     });
+  } else if (view === 'plan') {
+    const row = (item: (typeof items)[number]): Row => ({ item, date: null, late: false });
+    const soon = unplannedSoon(items, today);
+    const dayName = (d: string) =>
+      d === today ? `Today · ${prettyDate(d)}` : d === addDaysStr(today, 1) ? `Tomorrow · ${prettyDate(d)}` : prettyDate(d);
+    body = (
+      <>
+        {soon.length > 0 && (
+          <View style={styles.gap}>
+            <Text style={[styles.group, { color: c.muted }]}>DUE SOON · NOT PLANNED YET</Text>
+            <Text style={[styles.hint, { color: c.muted }]}>Tap 🕒 on a task to pick a day to work on it.</Text>
+            {soon.map((i) => renderRow(row(i)))}
+          </View>
+        )}
+        {planDays(items, today).map(({ date, items: dayItems }) => (
+          <View key={date} style={styles.gap}>
+            <Text style={[styles.group, { color: date === today ? c.accent : c.muted }]}>{dayName(date).toUpperCase()}</Text>
+            {dayItems.map((i) => renderRow(row(i)))}
+            <PlanDayAdd date={date} />
+          </View>
+        ))}
+      </>
+    );
   } else body = open.map(renderRow);
 
   const add = async () => {
@@ -250,7 +284,11 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   };
 
   return (
-    <View style={styles.mainWrap}>
+    // Clicking anywhere in the main area that isn't a task closes the open task's details.
+    <Pressable
+      style={[styles.mainWrap, { cursor: 'auto' } as object]}
+      accessible={false}
+      onPress={() => selId && onOpen(selId)}>
       <KeyboardAvoidingView style={[styles.fill, styles.main]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.head}>
           {onMenu && (
@@ -311,7 +349,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
           contentContainerStyle={[styles.gap, styles.listPad]}
           keyboardShouldPersistTaps="handled">
           {body}
-          {!open.length && (
+          {!open.length && view !== 'plan' && (
             <Text style={[styles.empty, { color: c.muted }]}>
               {view === 'myday' ? 'All clear for today.' : 'Nothing here yet — add a task above.'}
             </Text>
@@ -329,7 +367,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
         </ScrollView>
 
       </KeyboardAvoidingView>
-    </View>
+    </Pressable>
   );
 }
 
@@ -365,6 +403,7 @@ const styles = StyleSheet.create({
   h1: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
   gap: { gap: 6 },
   listPad: { paddingTop: 12, paddingBottom: 10 },
+  hint: { fontSize: 12.5, marginHorizontal: 4, marginTop: -2 },
   group: {
     fontSize: 12,
     fontWeight: '600',

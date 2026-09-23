@@ -48,5 +48,6 @@ export function repeatPatch(item: Item, choice: 'daily' | 'none', today: DateStr
     done: undefined,
     completedAt: undefined,
     myDay: undefined,
+    plan: undefined,
   };
 }

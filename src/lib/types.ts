@@ -27,6 +27,8 @@ export type Item = {
   // one-off only
   due?: DateStr;
   myDay?: DateStr;
+  /** The day the user plans to work on it (one-off only). Shows in My Day from then until done. */
+  plan?: DateStr;
   done?: boolean;
   completedAt?: Timestamp;
   // recurring only

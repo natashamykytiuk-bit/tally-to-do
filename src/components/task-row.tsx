@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-import { DueButton } from '@/components/due-button';
+import { DueButton, PlanButton } from '@/components/due-button';
 import { usePalette } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
@@ -24,13 +24,14 @@ type Props = {
   onToggle: () => void;
   onMyDay: () => void;
   onDue: (due: DateStr | undefined) => void;
+  onPlan: (plan: DateStr | undefined) => void;
   onDelete: () => void;
   onRename: (title: string) => void;
   onToggleStep: (stepId: string) => void;
 };
 
 export function TaskRow(props: Props) {
-  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onDelete, onRename, onToggleStep } = props;
+  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onPlan, onDelete, onRename, onToggleStep } = props;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(props.row.item.title);
   // Escape unmounts the input, which fires onBlur; this stops that blur from saving.
@@ -61,6 +62,11 @@ export function TaskRow(props: Props) {
   if (row.late && row.date) meta.push({ text: `Missed ${prettyDate(row.date)}`, warn: true });
   if (item.rule) meta.push({ text: `↻ ${scheduleText(item)}` });
   if (disabled) meta.push({ text: 'Not scheduled today' });
+  if (!item.rule && item.plan && !item.done) {
+    const late = item.plan < today;
+    const when = item.plan === today ? 'today' : prettyDate(item.plan);
+    meta.push({ text: late ? `Planned ${when}` : `Work on ${when}`, warn: late });
+  }
   if (!item.rule && item.due) {
     const overdue = item.due < today && !item.done;
     const when = item.due === today ? 'today' : prettyDate(item.due);
@@ -155,6 +161,7 @@ export function TaskRow(props: Props) {
       )}
       {!item.rule && (
         <>
+          <PlanButton value={item.plan} onChange={onPlan} />
           <DueButton value={item.due} onChange={onDue} />
           <Pressable
             onPress={onMyDay}

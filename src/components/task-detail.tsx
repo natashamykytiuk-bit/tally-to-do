@@ -103,6 +103,21 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
               Due {item.due === today ? 'today' : prettyDate(item.due)}. Shows in Planned, and in My Day once it’s due.
             </Text>
           )}
+
+          <Text style={[label, { marginTop: 6 }]}>Work on</Text>
+          <View style={styles.row}>
+            <DateField value={item.plan} onChange={(d) => set({ plan: d })} placeholder="Plan a day" />
+            {item.plan && (
+              <Pressable onPress={() => set({ plan: undefined })} hitSlop={8}>
+                <Text style={{ color: c.warn }}>Remove</Text>
+              </Pressable>
+            )}
+          </View>
+          <Text style={[styles.hint, { color: c.muted }]}>
+            {item.plan
+              ? `Shows in My Day on ${item.plan === today ? 'today' : prettyDate(item.plan)} and stays until it’s done.`
+              : 'Pick a day to work on it before it’s due. It’ll show in My Day and in Plan.'}
+          </Text>
         </View>
       )}
 

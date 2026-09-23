@@ -1,5 +1,5 @@
 import type { Item } from '../types';
-import { isRowDone, newItemDefaults, openCount, plannedGroup, rowsFor } from '../views';
+import { isRowDone, newItemDefaults, openCount, planDays, plannedGroup, rowsFor, unplannedSoon } from '../views';
 
 const TUE = '2026-09-22';
 const base = { listId: 'cpen' };
@@ -65,4 +65,40 @@ test('repeat adds a daily habit to the current list', () => {
   expect(it).toMatchObject({ listId: 'cpen', rule: { type: 'daily' }, startDate: TUE, missed: 'skip' });
   expect(newItemDefaults('myday', TUE, 'l1', true)).not.toHaveProperty('myDay');
   expect(newItemDefaults('planned', TUE, 'l1', true)).not.toHaveProperty('due');
+});
+
+describe('planning', () => {
+  const plan: Item[] = [
+    { id: 'p1', listId: 'l', title: 'Start essay', plan: '2026-09-23', due: '2026-09-30' },
+    { id: 'p2', listId: 'l', title: 'Leftover', plan: '2026-09-20' },
+    { id: 'p3', listId: 'l', title: 'Far off', plan: '2026-10-15' },
+    { id: 'p4', listId: 'l', title: 'Done', plan: '2026-09-24', done: true },
+    { id: 'u1', listId: 'l', title: 'Lab 4', due: '2026-09-25' },
+    { id: 'u2', listId: 'l', title: 'Late', due: '2026-09-19' },
+    { id: 'u3', listId: 'l', title: 'Next month', due: '2026-11-30' },
+  ];
+
+  test('My Day shows work planned for today or earlier, until done', () => {
+    expect(ids(rowsFor('myday', plan, TUE, {})).sort()).toEqual(['p2', 'u2']);
+    expect(ids(rowsFor('myday', plan, '2026-09-23', {}))).toContain('p1');
+  });
+
+  test('planDays: a week from today plus later planned days; leftovers roll into today', () => {
+    const days = planDays(plan, TUE);
+    expect(days.map((d) => d.date)).toEqual([
+      '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26', '2026-09-27', '2026-09-28', '2026-10-15',
+    ]);
+    expect(days[0].items.map((i) => i.id)).toEqual(['p2']);
+    expect(days[1].items.map((i) => i.id)).toEqual(['p1']);
+    expect(days[2].items).toEqual([]); // done tasks drop out
+    expect(days[7].items.map((i) => i.id)).toEqual(['p3']);
+  });
+
+  test('unplannedSoon: due within two weeks or overdue, not planned, soonest first', () => {
+    expect(unplannedSoon(plan, TUE).map((i) => i.id)).toEqual(['u2', 'u1']);
+  });
+
+  test('adding from Plan plans it for today', () => {
+    expect(newItemDefaults('plan', TUE, 'l1')).toMatchObject({ plan: TUE });
+  });
 });
