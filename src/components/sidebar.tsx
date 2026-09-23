@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
+import { Copyright } from '@/components/copyright';
 import type { MenuAnchor } from '@/components/list-menu';
 import { usePalette } from '@/constants/tally';
 import { dropIndex, moveIndex } from '@/lib/reorder';
@@ -143,6 +144,7 @@ export function Sidebar({ view, onSelect, onListMenu, onSettings }: Props) {
         </View>
         <Text style={[styles.label, { color: c.ink }]}>Settings</Text>
       </Pressable>
+      <Copyright />
     </View>
   );
 }

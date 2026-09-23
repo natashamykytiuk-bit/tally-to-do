@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Copyright } from '@/components/copyright';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useTheme } from '@/hooks/use-theme';
@@ -62,6 +63,9 @@ export default function SignIn() {
           <ThemedText type="link">{mode === 'in' ? 'New here? Create an account' : 'Have an account? Sign in'}</ThemedText>
         </Pressable>
         {/* TODO: Google sign-in (needs OAuth client IDs; expo-auth-session + signInWithCredential). */}
+      </SafeAreaView>
+      <SafeAreaView edges={['bottom']}>
+        <Copyright />
       </SafeAreaView>
     </ThemedView>
   );
