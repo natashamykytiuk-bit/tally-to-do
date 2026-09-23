@@ -52,9 +52,6 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
           style={[styles.title, { color: c.ink }]}
           accessibilityLabel="Task title"
         />
-        <Pressable onPress={() => set({ important: !item.important })} hitSlop={8} accessibilityLabel="Important">
-          <Text style={{ fontSize: 20, color: item.important ? c.accent : c.muted }}>{item.important ? '★' : '☆'}</Text>
-        </Pressable>
       </View>
 
       <View style={card}>

@@ -1,6 +1,9 @@
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import Ionicons from '@expo/vector-icons/Ionicons';
+
+import { DueButton } from '@/components/due-button';
 import { usePalette } from '@/constants/tally';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
@@ -16,18 +19,18 @@ type Props = {
   progress: AllProgress;
   /** Omitted when the view already is this list. */
   list?: List;
-  showMyDay: boolean;
   selected: boolean;
   onPress: () => void;
   onToggle: () => void;
-  onStar: () => void;
+  onMyDay: () => void;
+  onDue: (due: DateStr | undefined) => void;
   onDelete: () => void;
   onRename: (title: string) => void;
   onToggleStep: (stepId: string) => void;
 };
 
 export function TaskRow(props: Props) {
-  const { row, done, today, completions, progress, list, showMyDay, selected, onPress, onToggle, onStar, onDelete, onRename, onToggleStep } = props;
+  const { row, done, today, completions, progress, list, selected, onPress, onToggle, onMyDay, onDue, onDelete, onRename, onToggleStep } = props;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(props.row.item.title);
   // Escape unmounts the input, which fires onBlur; this stops that blur from saving.
@@ -50,6 +53,7 @@ export function TaskRow(props: Props) {
   };
 
   const meta: { text: string; warn?: boolean }[] = [];
+  const inMyDay = item.myDay === today;
   const steps = item.steps ?? [];
   const sc = stepCount(item, row.date, progress);
   if (list) meta.push({ text: list.name });
@@ -62,7 +66,6 @@ export function TaskRow(props: Props) {
     const when = item.due === today ? 'today' : prettyDate(item.due);
     meta.push({ text: overdue ? `Overdue · ${when}` : `Due ${when}`, warn: overdue });
   }
-  if (!item.rule && showMyDay && item.myDay === today) meta.push({ text: '☀ My Day' });
 
   return (
     <Pressable
@@ -150,9 +153,19 @@ export function TaskRow(props: Props) {
           🔥 {st}
         </Text>
       )}
-      <Pressable onPress={onStar} hitSlop={8} accessibilityLabel="Important" accessibilityRole="button">
-        <Text style={[styles.star, { color: item.important ? c.accent : c.muted }]}>{item.important ? '★' : '☆'}</Text>
-      </Pressable>
+      {!item.rule && (
+        <>
+          <DueButton value={item.due} onChange={onDue} />
+          <Pressable
+            onPress={onMyDay}
+            hitSlop={8}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: inMyDay }}
+            accessibilityLabel={inMyDay ? 'Remove from My Day' : 'Add to My Day'}>
+            <Ionicons name={inMyDay ? 'sunny' : 'sunny-outline'} size={19} color={inMyDay ? c.flame : c.muted} />
+          </Pressable>
+        </>
+      )}
       <Pressable
         onPress={onDelete}
         hitSlop={8}
@@ -194,6 +207,5 @@ const styles = StyleSheet.create({
   stepText: { fontSize: 13.5 },
   meta: { fontSize: 12.5, marginTop: 2 },
   streak: { fontSize: 12, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', fontVariant: ['tabular-nums'] },
-  star: { fontSize: 18 },
   del: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

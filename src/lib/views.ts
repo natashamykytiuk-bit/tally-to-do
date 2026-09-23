@@ -2,13 +2,12 @@ import { addDaysStr } from './dates';
 import { occursOn, pendingMissed } from './recurrence';
 import type { CompletionMap, DateStr, Item } from './types';
 
-export type SmartView = 'myday' | 'important' | 'planned' | 'habits';
+export type SmartView = 'myday' | 'planned' | 'habits';
 /** A smart view or a list id. */
 export type ViewId = SmartView | string;
 
 export const SMART_VIEWS: { id: SmartView; icon: string; name: string }[] = [
   { id: 'myday', icon: '☀', name: 'My Day' },
-  { id: 'important', icon: '★', name: 'Important' },
   { id: 'planned', icon: '▦', name: 'Planned' },
   { id: 'habits', icon: '↻', name: 'Habits' },
 ];
@@ -54,8 +53,6 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
       if (item.rule) rows.push(...recurringRows(item, today, all));
       else if (item.myDay === today || (item.due && item.due <= today && !item.done)) rows.push(one());
       else if (item.done && item.due === today) rows.push(one());
-    } else if (view === 'important') {
-      if (item.important) item.rule ? rows.push(...recurringRows(item, today, all)) : rows.push(one());
     } else if (view === 'planned') {
       if (!item.rule && item.due) rows.push(one());
     } else if (view === 'habits') {
@@ -87,8 +84,7 @@ export function newItemDefaults(
   fallbackListId: string,
   repeat = view === 'habits',
 ): Partial<Item> {
-  const base: Partial<Item> = { listId: isSmartView(view) ? fallbackListId : view, important: false };
-  if (view === 'important') base.important = true;
+  const base: Partial<Item> = { listId: isSmartView(view) ? fallbackListId : view };
   if (repeat) return { ...base, rule: { type: 'daily' }, startDate: today, missed: 'skip' };
   if (view === 'myday') base.myDay = today;
   if (view === 'planned') base.due = today;

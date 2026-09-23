@@ -10,7 +10,6 @@ const make = (rule: Rule, extra: Partial<Item> = {}): Item => ({
   id: 'x',
   listId: 'l',
   title: 't',
-  important: false,
   rule,
   startDate: '2026-09-01',
   missed: 'skip',
@@ -95,7 +94,7 @@ describe('occursOn', () => {
     expect(occursOn(it, '2026-09-25')).toBe(false);
   });
   test('one-off items never occur', () => {
-    expect(occursOn({ id: 'a', listId: 'l', title: 't', important: false, due: TUE }, TUE)).toBe(false);
+    expect(occursOn({ id: 'a', listId: 'l', title: 't', due: TUE }, TUE)).toBe(false);
   });
 });
 

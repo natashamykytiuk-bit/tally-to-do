@@ -2,8 +2,8 @@ import { customRule, repeatPatch, unitOf } from '../repeat';
 import type { Item } from '../types';
 
 const TUE = '2026-09-22';
-const oneOff: Item = { id: 'a', listId: 'l', title: 'Lab', important: false, due: '2026-09-24', done: true, myDay: TUE };
-const habit: Item = { id: 'b', listId: 'l', title: 'Read', important: false, rule: { type: 'daily' }, startDate: '2026-09-01', endDate: '2026-12-01', missed: 'carry' };
+const oneOff: Item = { id: 'a', listId: 'l', title: 'Lab', due: '2026-09-24', done: true, myDay: TUE };
+const habit: Item = { id: 'b', listId: 'l', title: 'Read', rule: { type: 'daily' }, startDate: '2026-09-01', endDate: '2026-12-01', missed: 'carry' };
 
 test('switching Repeat on makes a daily rule from the due date and clears one-off fields', () => {
   expect(repeatPatch(oneOff, 'daily', TUE)).toEqual({

@@ -2,9 +2,9 @@ import type { Item } from '../types';
 import { isRowDone, newItemDefaults, openCount, plannedGroup, rowsFor } from '../views';
 
 const TUE = '2026-09-22';
-const base = { listId: 'cpen', important: false };
+const base = { listId: 'cpen' };
 const items: Item[] = [
-  { ...base, id: 'lab', title: 'Lab 3', due: '2026-09-24', important: true },
+  { ...base, id: 'lab', title: 'Lab 3', due: '2026-09-24' },
   { ...base, id: 'read', title: 'Read ch. 2', due: TUE },
   { ...base, id: 'ps1', title: 'Problem set 1', due: '2026-09-21' },
   { ...base, id: 'yarn', listId: 'me', title: 'Buy yarn', myDay: TUE },
@@ -55,7 +55,6 @@ test('isRowDone reads the occurrence date', () => {
 
 test('adding from a view pre-fills context', () => {
   expect(newItemDefaults('myday', TUE, 'l1')).toMatchObject({ listId: 'l1', myDay: TUE });
-  expect(newItemDefaults('important', TUE, 'l1')).toMatchObject({ important: true });
   expect(newItemDefaults('planned', TUE, 'l1')).toMatchObject({ due: TUE });
   expect(newItemDefaults('habits', TUE, 'l1')).toMatchObject({ rule: { type: 'daily' }, startDate: TUE, missed: 'skip' });
   expect(newItemDefaults('cpen', TUE, 'l1')).toMatchObject({ listId: 'cpen' });

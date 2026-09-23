@@ -20,7 +20,8 @@ export type Item = {
   listId: string;
   title: string;
   notes?: string;
-  important: boolean;
+  /** Legacy (the Important list was removed); ignored. */
+  important?: boolean;
   createdAt?: Timestamp;
   steps?: Step[];
   // one-off only

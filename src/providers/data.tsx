@@ -130,7 +130,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
       },
       addItem: async (fields) => {
         const ref = doc(col('items'));
-        await setDoc(ref, { important: false, ...fields, createdAt: serverTimestamp() });
+        await setDoc(ref, { ...fields, createdAt: serverTimestamp() });
         return ref.id;
       },
       // undefined means "clear this field" (Firestore needs deleteField() for that).

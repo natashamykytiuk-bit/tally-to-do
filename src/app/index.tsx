@@ -184,11 +184,11 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       completions={completions}
       progress={progress}
       list={view === r.item.listId ? undefined : lists.find((l) => l.id === r.item.listId)}
-      showMyDay={view !== 'myday'}
       selected={selId === r.item.id}
       onPress={() => onOpen(r.item.id)}
       onToggle={() => toggle(r.item, r.date)}
-      onStar={() => updateItem(r.item.id, { important: !r.item.important })}
+      onMyDay={() => updateItem(r.item.id, { myDay: r.item.myDay === today ? undefined : today })}
+      onDue={(due) => updateItem(r.item.id, { due })}
       onRename={(title) => updateItem(r.item.id, { title })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
       onDelete={() => {

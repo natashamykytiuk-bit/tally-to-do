@@ -5,7 +5,7 @@ const steps = [
   { id: 'a', title: 'Read', done: true },
   { id: 'b', title: 'Write' },
 ];
-const oneOff: Item = { id: 'x', listId: 'l', title: 'Lab', important: false, steps };
+const oneOff: Item = { id: 'x', listId: 'l', title: 'Lab', steps };
 const habit: Item = { ...oneOff, id: 'h', rule: { type: 'daily' }, startDate: '2026-09-01', steps: steps.map(({ id, title }) => ({ id, title })) };
 const progress = { h: { '2026-09-22': ['a'] } };
 

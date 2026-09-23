@@ -1,4 +1,5 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import Head from 'expo-router/head';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -27,6 +28,10 @@ function RootStack() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* Web tab title. Rendered here, not in RootStack, so it's present before auth loads (and in the static HTML). */}
+      <Head>
+        <title>Tally</title>
+      </Head>
       <AuthProvider>
         <PrefsProvider>
           <RootStack />
