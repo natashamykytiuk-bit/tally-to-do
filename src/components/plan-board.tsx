@@ -1,44 +1,59 @@
 import { useRef, useState, type ReactNode } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 
 import { PlanDayAdd } from '@/components/plan-day-add';
-import { usePalette } from '@/constants/tally';
-import { addDaysStr, prettyDate } from '@/lib/dates';
+import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
+import { dow, prettyDate } from '@/lib/dates';
 import { markDragged, rowDrag } from '@/lib/drag';
-import { zoneAt, type Zone } from '@/lib/reorder';
+import { zoneAtPoint, type Zone2D } from '@/lib/reorder';
 import type { DateStr, Item } from '@/lib/types';
-import { planDays, unplannedSoon } from '@/lib/views';
+import { planWeek, unplannedSoon } from '@/lib/views';
 
 const UNPLANNED = 'unplanned';
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 type Props = {
   items: Item[];
   today: DateStr;
-  renderRow: (item: Item) => ReactNode;
+  /** Sunday of the week being shown. */
+  weekStart: DateStr;
+  /** Renders a task; `compact` for the narrow day columns. */
+  renderRow: (item: Item, compact: boolean) => ReactNode;
   /** Moves one of a task's work days: `from`/`to` are days, or undefined for "not planned". */
   onMove: (id: string, from: DateStr | undefined, to: DateStr | undefined) => void;
   /** Called with true while a drag is in progress, so the page can stop scrolling. */
   onDragging: (dragging: boolean) => void;
 };
 
-/** The Plan view: unplanned tasks due soon, then one section per day. Drag a task to move it to another day. */
-export function PlanBoard({ items, today, renderRow, onMove, onDragging }: Props) {
+/**
+ * The Plan view: tasks due soon that aren't planned yet, then the week (Sun–Sat): side-by-side columns on a
+ * computer, stacked rows (one per day) on a phone.
+ * Drag a task onto a day to plan it there, or onto "Due soon" to un-plan it.
+ */
+export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDragging }: Props) {
   const c = usePalette();
+  const columnsLayout = useWindowDimensions().width >= WIDE_BREAKPOINT;
   const soon = unplannedSoon(items, today);
-  const days = planDays(items, today);
+  const week = planWeek(items, today, weekStart);
 
-  // Section positions are measured when a drag starts; `over` is the section under the pointer.
-  const sections = useRef(new Map<string, View>());
-  const zones = useRef<Zone[]>([]);
-  const [drag, setDrag] = useState<{ id: string; from: string; dy: number; over: string | null } | null>(null);
+  // Drop zones (the "due soon" area and each day column) are measured when a drag starts.
+  const zoneViews = useRef(new Map<string, View>());
+  const zones = useRef<Zone2D[]>([]);
+  const [drag, setDrag] = useState<{ id: string; from: string; dx: number; dy: number; over: string | null } | null>(
+    null,
+  );
   const dragRef = useRef(drag);
   dragRef.current = drag;
 
   const measure = () => {
     zones.current = [];
-    sections.current.forEach((view, key) =>
-      view?.measureInWindow((_x, y, _w, h) => zones.current.push({ key, top: y, bottom: y + h })),
+    zoneViews.current.forEach((view, key) =>
+      view?.measureInWindow((x, y, w, h) =>
+        zones.current.push(
+          key === UNPLANNED ? { key, top: y, bottom: y + h } : { key, top: y, bottom: y + h, left: x, right: x + w },
+        ),
+      ),
     );
   };
 
@@ -47,9 +62,19 @@ export function PlanBoard({ items, today, renderRow, onMove, onDragging }: Props
       .onStart(() => {
         measure();
         onDragging(true);
-        setDrag({ id, from, dy: 0, over: from });
+        setDrag({ id, from, dx: 0, dy: 0, over: from });
       })
-      .onUpdate((e) => setDrag((d) => d && { ...d, dy: e.translationY, over: zoneAt(zones.current, e.absoluteY) }))
+      .onUpdate((e) =>
+        setDrag(
+          (d) =>
+            d && {
+              ...d,
+              dx: e.translationX,
+              dy: e.translationY,
+              over: zoneAtPoint(zones.current, e.absoluteX, e.absoluteY),
+            },
+        ),
+      )
       .onEnd(() => {
         markDragged(); // only runs after a real drag, not a plain click
         const d = dragRef.current;
@@ -61,90 +86,106 @@ export function PlanBoard({ items, today, renderRow, onMove, onDragging }: Props
         onDragging(false);
       });
 
-  const rows = (list: Item[], from: string) =>
+  const rows = (list: Item[], from: string, compact: boolean) =>
     list.map((item) => {
-      // A multi-day task appears in several sections; only the copy being dragged moves.
-      const dragging = drag?.id === item.id;
+      // A multi-day task appears in several columns; only the copy being dragged moves.
+      const moving = drag?.id === item.id && drag.from === from;
       return (
         <GestureDetector key={item.id} gesture={gesture(item.id, from)}>
           <View
             style={
-              dragging && drag.from === from && { transform: [{ translateY: drag.dy }], zIndex: 20, opacity: 0.92 }
+              moving && { transform: [{ translateX: drag.dx }, { translateY: drag.dy }], zIndex: 30, opacity: 0.92 }
             }>
-            {renderRow(item)}
+            {renderRow(item, compact)}
           </View>
         </GestureDetector>
       );
     });
 
-  // The section being hovered during a drag (not the one the task came from) gets a highlight.
-  const section = (key: string, children: ReactNode) => {
-    const target = drag && drag.over === key && drag.from !== key;
+  const zoneRef = (key: string) => (v: View | null) => {
+    if (v) zoneViews.current.set(key, v);
+    else zoneViews.current.delete(key);
+  };
+  // The zone under a dragged task (other than where it came from) is highlighted.
+  const highlight = (key: string) =>
+    drag && drag.over === key && drag.from !== key && { borderColor: c.accent, backgroundColor: c.accentSoft };
+
+  const columns = week.map(({ date, items: dayItems }) => {
+    const isToday = date === today;
     return (
       <View
-        key={key}
-        ref={(v) => {
-          if (v) sections.current.set(key, v);
-          else sections.current.delete(key);
-        }}
+        key={date}
+        ref={zoneRef(date)}
+        role="group"
+        aria-label={`${isToday ? 'Today, ' : ''}${prettyDate(date)}, ${dayItems.length} ${dayItems.length === 1 ? 'task' : 'tasks'}`}
         style={[
-          styles.section,
-          drag && {
-            borderColor: target ? c.accent : 'transparent',
-            backgroundColor: target ? c.accentSoft : 'transparent',
-          },
-          // Keep the dragged task drawn above later sections.
-          drag?.from === key && { zIndex: 10 },
+          columnsLayout ? styles.column : styles.dayRow,
+          { backgroundColor: c.side, borderColor: isToday ? c.accent : 'transparent' },
+          highlight(date),
+          drag?.from === date && { zIndex: 20 },
         ]}>
-        {children}
+        <View
+          style={columnsLayout ? styles.dayHead : styles.dayHeadRow}
+          role="heading"
+          aria-level={2}
+          aria-label={prettyDate(date)}>
+          <Text style={[styles.dayName, { color: isToday ? c.accent : c.muted }]}>
+            {DAY_NAMES[dow(date)].toUpperCase()}
+          </Text>
+          <Text style={[styles.dayNum, { color: isToday ? c.accent : c.ink }]}>{Number(date.slice(8))}</Text>
+          {!columnsLayout && isToday && <Text style={[styles.todayTag, { color: c.accent }]}>TODAY</Text>}
+        </View>
+        <View style={styles.cards}>{rows(dayItems, date, columnsLayout)}</View>
+        <PlanDayAdd date={date} compact={columnsLayout} />
       </View>
     );
-  };
-
-  const dayName = (d: DateStr) =>
-    d === today
-      ? `Today · ${prettyDate(d)}`
-      : d === addDaysStr(today, 1)
-        ? `Tomorrow · ${prettyDate(d)}`
-        : prettyDate(d);
+  });
 
   return (
     <>
-      {(soon.length > 0 || drag) &&
-        section(
-          UNPLANNED,
-          <>
-            <Text style={[styles.group, { color: c.muted }]} role="heading" aria-level={2} aria-label="Due soon, not planned yet">
-              DUE SOON · NOT PLANNED YET
-            </Text>
-            <Text style={[styles.hint, { color: c.muted }]}>
-              {soon.length ? 'Drag a task onto a day, or tap 🕒 to pick days.' : 'Drop here to un-plan a task.'}
-            </Text>
-            {rows(soon, UNPLANNED)}
-          </>,
-        )}
-      {days.map(({ date, items: dayItems }) =>
-        section(
-          date,
-          <>
-            <Text
-              style={[styles.group, { color: date === today ? c.accent : c.muted }]}
-              role="heading"
-              aria-level={2}
-              aria-label={dayName(date).replace(' · ', ', ')}>
-              {dayName(date).toUpperCase()}
-            </Text>
-            {rows(dayItems, date)}
-            <PlanDayAdd date={date} />
-          </>,
-        ),
+      {(soon.length > 0 || drag) && (
+        <View
+          ref={zoneRef(UNPLANNED)}
+          style={[styles.unplanned, highlight(UNPLANNED), drag?.from === UNPLANNED && { zIndex: 20 }]}>
+          <Text
+            style={[styles.group, { color: c.muted }]}
+            role="heading"
+            aria-level={2}
+            aria-label="Due soon, not planned yet">
+            DUE SOON · NOT PLANNED YET
+          </Text>
+          <Text style={[styles.hint, { color: c.muted }]}>
+            {soon.length ? 'Drag a task onto a day, or tap 🕒 to pick days.' : 'Drop here to un-plan a task.'}
+          </Text>
+          {rows(soon, UNPLANNED, false)}
+        </View>
       )}
+      <View style={columnsLayout ? styles.week : styles.weekRows}>{columns}</View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  section: { gap: 6, borderWidth: 1.5, borderColor: 'transparent', borderRadius: 12, padding: 4, margin: -5 },
-  group: { fontSize: 12, fontWeight: '600', letterSpacing: 0.7, marginTop: 12, marginBottom: 2, marginHorizontal: 4 },
+  unplanned: {
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+    borderRadius: 12,
+    padding: 4,
+    margin: -5,
+    marginBottom: 6,
+  },
+  group: { fontSize: 12, fontWeight: '600', letterSpacing: 0.7, marginTop: 4, marginHorizontal: 4 },
   hint: { fontSize: 12.5, marginHorizontal: 4, marginTop: -2 },
+  week: { flexDirection: 'row', gap: 8, alignItems: 'stretch', paddingTop: 8 },
+  column: { flex: 1, minWidth: 0, borderWidth: 1.5, borderRadius: 12, padding: 6, gap: 6, minHeight: 260 },
+  // Phones: one full-width row per day, stacked.
+  weekRows: { gap: 8, paddingTop: 8 },
+  dayRow: { borderWidth: 1.5, borderRadius: 12, padding: 8, gap: 6 },
+  dayHeadRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 4, paddingBottom: 2 },
+  todayTag: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  dayHead: { alignItems: 'center', paddingVertical: 4 },
+  dayName: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  dayNum: { fontSize: 20, fontWeight: '700' },
+  cards: { gap: 6, flex: 1 },
 });

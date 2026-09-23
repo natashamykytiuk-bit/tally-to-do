@@ -53,3 +53,14 @@ export function sortRows<T extends Sortable>(rows: T[], mode: SortMode, order: s
   if (mode === 'created') return out.sort((a, b) => (b.created ?? -1) - (a.created ?? -1) || stable(a, b));
   return out.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true }) || stable(a, b));
 }
+
+/** Drop zones with a horizontal extent too (e.g. day columns); `left`/`right` default to the whole width. */
+export type Zone2D = Zone & { left?: number; right?: number };
+
+/** The zone under a pointer at (x, y), or null. Zones without left/right match any x. */
+export function zoneAtPoint(zones: Zone2D[], x: number, y: number): string | null {
+  const hit = zones.find(
+    (z) => y >= z.top && y <= z.bottom && (z.left === undefined || (x >= z.left && x <= (z.right ?? Infinity))),
+  );
+  return hit?.key ?? null;
+}

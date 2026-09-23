@@ -1,5 +1,5 @@
 import type { Item } from '../types';
-import { isRowDone, newItemDefaults, openCount, planDays, plannedGroup, rowsFor, unplannedSoon } from '../views';
+import { isRowDone, newItemDefaults, openCount, planDays, plannedGroup, planWeek, rowsFor, unplannedSoon } from '../views';
 
 const TUE = '2026-09-22';
 const base = { listId: 'cpen' };
@@ -125,4 +125,20 @@ test('Done for today moves out of the open count until tomorrow', () => {
   const t: Item[] = [{ id: 'e', title: 'Essay', myDay: TUE, doneForDay: TUE }, { id: 'f', title: 'Read', myDay: TUE }];
   expect(openCount('myday', t, TUE, {})).toBe(1);
   expect(openCount('myday', [{ ...t[0], myDay: '2026-09-23' }], '2026-09-23', {})).toBe(1);
+});
+
+test('planWeek: Sun–Sat columns; leftovers roll into today only', () => {
+  const t: Item[] = [
+    { id: 'a', title: 'Essay', plans: ['2026-09-23', '2026-09-25'] },
+    { id: 'b', title: 'Old', plans: ['2026-09-20'] },
+    { id: 'c', title: 'Next week', plans: ['2026-09-29'] },
+  ];
+  const week = planWeek(t, TUE, '2026-09-20');
+  expect(week.map((d) => d.date)).toEqual(['2026-09-20', '2026-09-21', '2026-09-22', '2026-09-23', '2026-09-24', '2026-09-25', '2026-09-26']);
+  const ids = (d: string) => week.find((w) => w.date === d)!.items.map((i) => i.id);
+  expect(ids('2026-09-20')).toEqual(['b']); // still shown on its own day
+  expect(ids(TUE)).toEqual(['b']); // and rolled into today
+  expect(ids('2026-09-23')).toEqual(['a']);
+  expect(ids('2026-09-25')).toEqual(['a']);
+  expect(planWeek(t, TUE, '2026-09-27').find((d) => d.date === '2026-09-29')!.items.map((i) => i.id)).toEqual(['c']);
 });

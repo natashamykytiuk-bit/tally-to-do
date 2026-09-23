@@ -121,3 +121,15 @@ export function unplannedSoon(items: Item[], today: DateStr, days = 14): Item[] 
     .filter((i) => !i.rule && !i.done && !plansOf(i).length && i.due && i.due <= limit)
     .sort((a, b) => a.due!.localeCompare(b.due!));
 }
+
+/**
+ * The Plan view's week: seven days from `weekStart` (a Sunday), each with the open tasks planned for it.
+ * In the current week, work left over from earlier days rolls into today.
+ */
+export function planWeek(items: Item[], today: DateStr, weekStart: DateStr): { date: DateStr; items: Item[] }[] {
+  const open = items.filter((i) => !i.rule && !i.done && plansOf(i).length);
+  return Array.from({ length: 7 }, (_, k) => {
+    const date = addDaysStr(weekStart, k);
+    return { date, items: open.filter((i) => plansOf(i).includes(date) || (date === today && planOverdue(i, today))) };
+  });
+}

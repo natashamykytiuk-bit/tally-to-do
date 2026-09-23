@@ -34,10 +34,13 @@ type Props = {
   /** Manual partial progress (1–99), or undefined to clear. */
   onProgress: (pct: number | undefined) => void;
   onToggleStep: (stepId: string) => void;
+  /** Narrow card for the Plan week columns: circle, title and due date only. */
+  compact?: boolean;
 };
 
 export function TaskRow(props: Props) {
   const {
+    compact,
     row,
     done,
     today,
@@ -92,6 +95,7 @@ export function TaskRow(props: Props) {
   if (disabled) meta.push({ text: 'Not scheduled today' });
   const plan = item.rule ? null : planLabel(item, today);
   if (plan) meta.push(plan);
+  if (compact) meta.splice(0, meta.length);
   if (!item.rule && item.due) {
     const overdue = item.due < today && !item.done;
     const when = item.due === today ? 'today' : prettyDate(item.due);
@@ -114,6 +118,7 @@ export function TaskRow(props: Props) {
       accessibilityState={{ selected }}
       style={[
         styles.row,
+        compact && styles.compact,
         {
           backgroundColor: row.late && !done ? c.warnSoft : c.panel,
           shadowColor: c.ink,
@@ -177,7 +182,7 @@ export function TaskRow(props: Props) {
             ))}
           </Text>
         )}
-        {steps.length > 0 && !done && (
+        {steps.length > 0 && !done && !compact && (
           <View style={styles.steps}>
             {steps.map((st) => {
               const on = isStepDone(item, st, row.date, progress);
@@ -207,14 +212,14 @@ export function TaskRow(props: Props) {
           </View>
         )}
       </View>
-      {st >= 2 && (
+      {st >= 2 && !compact && (
         <Text
           style={[styles.streak, { backgroundColor: c.flameSoft, color: c.flame }]}
           accessibilityLabel={`${st}-day streak`}>
           🔥 {st}
         </Text>
       )}
-      {!item.rule && (
+      {!item.rule && !compact && (
         <>
           <PlanButton days={plansOf(item)} onChange={onPlan} task={item.title} />
           <DueButton value={item.due} onChange={onDue} task={item.title} />
@@ -249,6 +254,7 @@ const styles = StyleSheet.create({
   chk: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, minWidth: 0 },
   title: { fontSize: 15 },
+  compact: { gap: 8, paddingVertical: 8, paddingHorizontal: 8, alignItems: 'flex-start' },
   // Only the text itself is the edit target; the rest of the row still opens details.
   titleHit: { alignSelf: 'flex-start' },
   titleInput: { borderBottomWidth: 1, paddingVertical: 0, marginVertical: -1 },

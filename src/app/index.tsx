@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -28,7 +29,7 @@ import { ReorderList } from '@/components/reorder-list';
 import { TaskRow } from '@/components/task-row';
 import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
-import { prettyDate } from '@/lib/dates';
+import { addDaysStr, prettyDate, weekLabel, weekStart } from '@/lib/dates';
 import { movePlanDay, plansOf, plansPatch } from '@/lib/plan';
 import { isDoneForToday } from '@/lib/progress';
 import { SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
@@ -208,6 +209,8 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const { lists, items, today, completions, progress, addItem, updateItem, toggle, toggleStep } = useData();
   const [showDone, setShowDone] = useState(true);
   const [dragging, setDragging] = useState(false);
+  const [planWeekStart, setPlanWeekStart] = useState(() => weekStart(today));
+  const thisWeek = weekStart(today);
   const { prefs, setPrefs } = usePrefs();
   const sortMode: SortMode = prefs.mydaySort ?? 'custom';
   const [draft, setDraft] = useState('');
@@ -225,7 +228,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       : view === 'habits'
         ? 'Everything that repeats, with current streaks'
         : view === 'plan'
-          ? 'Choose days to work on things before they’re due'
+          ? weekLabel(planWeekStart)
           : '';
 
   const rows = rowsFor(view, items, today, completions);
@@ -234,7 +237,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
   const open = rows.filter((r) => !finished(r));
   const done = rows.filter(finished);
 
-  const renderRow = (r: Row) => (
+  const renderRow = (r: Row, compact = false) => (
     <TaskRow
       key={`${r.item.id}|${r.date ?? ''}`}
       row={r}
@@ -252,6 +255,7 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       onRename={(title) => updateItem(r.item.id, { title })}
       onProgress={(progress) => updateItem(r.item.id, { progress })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
+      compact={compact}
     />
   );
 
@@ -274,7 +278,8 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       <PlanBoard
         items={items}
         today={today}
-        renderRow={(item) => renderRow({ item, date: null, late: false })}
+        weekStart={planWeekStart}
+        renderRow={(item, compact) => renderRow({ item, date: null, late: false }, compact)}
         onMove={(id, from, to) => {
           const item = items.find((i) => i.id === id);
           if (item) updateItem(id, plansPatch(movePlanDay(plansOf(item), from, to)));
@@ -325,7 +330,9 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
       focusable={false}
       tabIndex={-1}
       onPress={() => selId && onOpen(selId)}>
-      <KeyboardAvoidingView style={[styles.fill, styles.main]} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={[styles.fill, styles.main, view === 'plan' && styles.mainWide]}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.head}>
           {onMenu && (
             <Pressable
@@ -355,6 +362,43 @@ function MainList({ view, onMenu, selId, onOpen, onEditList }: MainProps) {
             </View>
             {!!subtitle && <Text style={{ color: c.muted, marginTop: 2 }}>{subtitle}</Text>}
           </View>
+          {view === 'plan' && (
+            <View style={styles.weekNav} role="toolbar" aria-label="Choose week">
+              <Pressable
+                onPress={() => setPlanWeekStart(addDaysStr(planWeekStart, -7))}
+                accessibilityRole="button"
+                accessibilityLabel="Previous week"
+                style={({ hovered }) => [
+                  styles.weekBtn,
+                  { borderColor: c.line, backgroundColor: hovered ? c.accentSoft : c.panel },
+                ]}>
+                <Ionicons name="chevron-back" size={18} color={c.ink} />
+              </Pressable>
+              <Pressable
+                onPress={() => setPlanWeekStart(thisWeek)}
+                disabled={planWeekStart === thisWeek}
+                accessibilityRole="button"
+                accessibilityLabel="Go to this week"
+                style={({ hovered }) => [
+                  styles.weekBtn,
+                  styles.weekToday,
+                  { borderColor: c.line, backgroundColor: hovered ? c.accentSoft : c.panel },
+                  planWeekStart === thisWeek && { opacity: 0.5 },
+                ]}>
+                <Text style={{ color: c.ink, fontSize: 13, fontWeight: '600' }}>This week</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setPlanWeekStart(addDaysStr(planWeekStart, 7))}
+                accessibilityRole="button"
+                accessibilityLabel="Next week"
+                style={({ hovered }) => [
+                  styles.weekBtn,
+                  { borderColor: c.line, backgroundColor: hovered ? c.accentSoft : c.panel },
+                ]}>
+                <Ionicons name="chevron-forward" size={18} color={c.ink} />
+              </Pressable>
+            </View>
+          )}
           {view === 'myday' && (
             <View style={styles.sort}>
               <Text style={{ color: c.muted, fontSize: 13 }}>Sort</Text>
@@ -464,6 +508,18 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   menu: { paddingTop: 4 },
   sort: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingTop: 6, zIndex: 30 },
+  // The week needs more room than a single list.
+  mainWide: { maxWidth: 1400 },
+  weekNav: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingTop: 6 },
+  weekBtn: {
+    height: 32,
+    minWidth: 32,
+    borderWidth: 1,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  weekToday: { paddingHorizontal: 10 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10, flexWrap: 'wrap' },
   edit: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   h1: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },

@@ -1,4 +1,4 @@
-import { dropIndex, moveIndex, sortRows, zoneAt } from '../reorder';
+import { dropIndex, moveIndex, sortRows, zoneAt, zoneAtPoint } from '../reorder';
 
 test('moveIndex', () => {
   expect(moveIndex(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd']);
@@ -43,4 +43,16 @@ describe('sortRows', () => {
     expect(keys(sortRows(rows, 'custom', ['c', 'a']))).toBe('cabd');
     expect(keys(sortRows(rows, 'custom'))).toBe('abcd');
   });
+});
+
+test('zoneAtPoint finds the column under the pointer', () => {
+  const zones = [
+    { key: 'unplanned', top: 0, bottom: 100 },
+    { key: 'sun', top: 120, bottom: 500, left: 0, right: 99 },
+    { key: 'mon', top: 120, bottom: 500, left: 100, right: 199 },
+  ];
+  expect(zoneAtPoint(zones, 150, 50)).toBe('unplanned');
+  expect(zoneAtPoint(zones, 50, 300)).toBe('sun');
+  expect(zoneAtPoint(zones, 150, 300)).toBe('mon');
+  expect(zoneAtPoint(zones, 500, 300)).toBeNull();
 });

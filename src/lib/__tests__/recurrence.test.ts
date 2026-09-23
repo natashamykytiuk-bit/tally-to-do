@@ -1,4 +1,4 @@
-import { addDaysStr, daysBetween, dow } from '../dates';
+import { addDaysStr, daysBetween, dow, weekLabel } from '../dates';
 import { completionKind, occursOn, pendingMissed, ruleText, streak } from '../recurrence';
 import type { CompletionMap, Item, Rule } from '../types';
 
@@ -169,4 +169,10 @@ describe('helpers', () => {
     expect(ruleText({ type: 'monthly', dom: 22, interval: 3 })).toBe('Every 3 months on the 22nd');
     expect(ruleText({ type: 'monthly', dom: 1 })).toBe('Monthly on the 1st');
   });
+});
+
+test('weekLabel', () => {
+  expect(weekLabel('2026-09-20', '2026')).toBe('Sep 20 – 26');
+  expect(weekLabel('2026-09-27', '2026')).toBe('Sep 27 – Oct 3');
+  expect(weekLabel('2026-12-27', '2026')).toBe('Dec 27 – Jan 2, 2027');
 });
