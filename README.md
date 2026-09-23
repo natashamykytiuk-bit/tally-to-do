@@ -87,3 +87,7 @@ Data lives under `users/{uid}/` in Firestore:
 - `meta/prefs`: theme and accent colour.
 
 Each day's list is computed from those rules; nothing is copied per day.
+
+## License
+
+© 2026 Natasha Mykytiuk. All rights reserved. The code is published for viewing only; see [LICENSE](LICENSE).
