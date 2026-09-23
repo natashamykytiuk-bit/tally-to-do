@@ -1,5 +1,5 @@
 import type { Item } from '../types';
-import { isRowDone, newItemDefaults, openCount, planDays, plannedGroup, planWeek, rowsFor, unplannedSoon } from '../views';
+import { isRowDone, newItemDefaults, openCount, planDayTasks, planDays, plannedGroup, planWeek, rowsFor, unplannedSoon } from '../views';
 
 const TUE = '2026-09-22';
 const base = { listId: 'cpen' };
@@ -148,4 +148,16 @@ test('planWeek: Sun–Sat columns; leftovers roll into today only', () => {
   expect(ids('2026-09-23')).toEqual(['a']);
   expect(ids('2026-09-25')).toEqual(['a']);
   expect(planWeek(t, TUE, '2026-09-27').find((d) => d.date === '2026-09-29')!.items.map((i) => i.id)).toEqual(['c']);
+});
+
+test('planDayTasks counts finished tasks too, and today includes carried-over work', () => {
+  const t: Item[] = [
+    { id: 'a', title: 'Done one', plans: ['2026-09-23'], done: true },
+    { id: 'b', title: 'Open one', plans: ['2026-09-23'] },
+    { id: 'c', title: 'Leftover', plans: ['2026-09-20'] },
+    { id: 'h', title: 'Habit', rule: { type: 'daily' }, startDate: '2026-09-01' },
+  ];
+  expect(planDayTasks(t, '2026-09-23', TUE).map((i) => i.id)).toEqual(['a', 'b']);
+  expect(planDayTasks(t, TUE, TUE).map((i) => i.id)).toEqual(['c']);
+  expect(planDayTasks(t, '2026-09-24', TUE)).toEqual([]);
 });

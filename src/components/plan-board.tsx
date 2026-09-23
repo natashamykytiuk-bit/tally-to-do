@@ -3,12 +3,14 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 
 import { PlanDayAdd } from '@/components/plan-day-add';
+import { ProgressCircle } from '@/components/progress-circle';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { dow, prettyDate } from '@/lib/dates';
 import { markDragged, rowDrag } from '@/lib/drag';
 import { zoneAtPoint, type Zone2D } from '@/lib/reorder';
 import type { DateStr, Item } from '@/lib/types';
-import { planWeek, unplannedSoon } from '@/lib/views';
+import { fractionOf, overallProgress } from '@/lib/progress';
+import { planDayTasks, planWeek, unplannedSoon } from '@/lib/views';
 
 const UNPLANNED = 'unplanned';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -112,6 +114,8 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
 
   const columns = week.map(({ date, items: dayItems }) => {
     const isToday = date === today;
+    // The day's pie: everything planned for it, finished or not; partly done tasks count for their share.
+    const dayPie = overallProgress(planDayTasks(items, date, today).map((i) => fractionOf(i, null, !!i.done, {})));
     return (
       <View
         key={date}
@@ -134,6 +138,17 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
           </Text>
           <Text style={[styles.dayNum, { color: isToday ? c.accent : c.ink }]}>{Number(date.slice(8))}</Text>
           {!columnsLayout && isToday && <Text style={[styles.todayTag, { color: c.accent }]}>TODAY</Text>}
+          {dayPie.total > 0 && (
+            <View
+              style={[styles.dayPie, !columnsLayout && styles.dayPieRow]}
+              role="img"
+              aria-label={`${dayPie.done} of ${dayPie.total} planned ${dayPie.total === 1 ? 'task' : 'tasks'} done`}>
+              <ProgressCircle size={16} fraction={dayPie.fraction} color={c.accent} ring={c.line} />
+              <Text style={[styles.dayPieText, { color: c.muted }]} aria-hidden>
+                {dayPie.done}/{dayPie.total}
+              </Text>
+            </View>
+          )}
         </View>
         <View style={styles.cards}>{rows(dayItems, date, columnsLayout)}</View>
         <PlanDayAdd date={date} compact={columnsLayout} />
@@ -188,4 +203,8 @@ const styles = StyleSheet.create({
   dayName: { fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
   dayNum: { fontSize: 20, fontWeight: '700' },
   cards: { gap: 6, flex: 1 },
+  dayPie: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  // In phone rows the pie sits at the right end of the day's heading line.
+  dayPieRow: { marginTop: 0, marginLeft: 'auto', alignSelf: 'center' },
+  dayPieText: { fontSize: 11, fontVariant: ['tabular-nums'] },
 });

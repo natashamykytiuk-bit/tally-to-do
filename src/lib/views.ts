@@ -138,3 +138,10 @@ export function planWeek(items: Item[], today: DateStr, weekStart: DateStr): { d
     return { date, items: open.filter((i) => plansOf(i).includes(date) || (date === today && planOverdue(i, today))) };
   });
 }
+
+/**
+ * Tasks that count toward a Plan day's pie: every one-off planned for that day, finished or not.
+ * Today also includes unfinished work carried over from earlier days (as the column shows).
+ */
+export const planDayTasks = (items: Item[], date: DateStr, today: DateStr): Item[] =>
+  items.filter((i) => !i.rule && (plansOf(i).includes(date) || (date === today && planOverdue(i, today))));

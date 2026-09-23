@@ -12,6 +12,7 @@ A to-do list and habit tracker in the style of Microsoft To Do. Put one-off task
 - **Plan:** a Sunday–Saturday week, with days side by side as columns on a computer and stacked as rows on a phone.
   - Pick one or more days to work on each task with 🕒, or add tasks straight onto a day.
   - Drag a task from one day to another.
+  - Each day has a small pie showing how much of what's planned for it is done.
   - ‹ and › move between weeks, and **This week** jumps back.
   - Tasks due soon that aren't planned yet wait at the top.
 - **Scheduled:** tasks with due dates, grouped into Overdue, Today, Tomorrow, Later this week, Next week and Later.
