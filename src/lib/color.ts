@@ -11,18 +11,3 @@ export function normalizeHex(input: string): string | null {
   if (/^[0-9a-f]{6}$/i.test(v)) return '#' + v.toUpperCase();
   return null;
 }
-
-/** Blends `tint` into `base` (both hex) by `amount` (0–1); returns `base` if either isn't a hex colour. */
-export function mixHex(base: string, tint: string, amount: number): string {
-  const a = normalizeHex(base);
-  const b = normalizeHex(tint);
-  if (!a || !b) return base;
-  const ch = (h: string, i: number) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
-  return (
-    '#' +
-    [0, 1, 2]
-      .map((i) => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * amount).toString(16).padStart(2, '0'))
-      .join('')
-      .toUpperCase()
-  );
-}

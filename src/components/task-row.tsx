@@ -17,7 +17,6 @@ import { useConfetti } from '@/components/confetti';
 import { ProgressCircle } from '@/components/progress-circle';
 import { ProgressMenu, type PointAnchor } from '@/components/progress-menu';
 import { usePalette } from '@/constants/tally';
-import { mixHex } from '@/lib/color';
 import { justDragged } from '@/lib/drag';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
@@ -47,7 +46,7 @@ type Props = {
   onToggleStep: (stepId: string) => void;
   /** Narrow card for the Plan week columns: circle, title and due date only. */
   compact?: boolean;
-  /** List colour to tint the card with (used in Plan). */
+  /** List colour shown as a strip down the card's left edge (My Day and Plan). */
   tint?: string;
 };
 
@@ -151,11 +150,12 @@ export function TaskRow(props: Props) {
         styles.row,
         compact && styles.compact,
         {
-          backgroundColor: row.late && !done ? c.warnSoft : tint ? mixHex(c.panel, tint, 0.14) : c.panel,
+          backgroundColor: row.late && !done ? c.warnSoft : c.panel,
           shadowColor: c.ink,
           borderColor: selected ? c.accent : 'transparent',
         },
       ]}>
+      {!!tint && <View style={[styles.strip, { backgroundColor: tint }]} aria-hidden />}
       <Pressable
         ref={circleRef}
         onPress={complete}
@@ -285,6 +285,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     elevation: 1,
   },
+  // Sits over the card's left border; rounded to match the card's corners.
+  strip: { position: 'absolute', left: -1, top: -1, bottom: -1, width: 4, borderTopLeftRadius: 10, borderBottomLeftRadius: 10 },
   chk: { width: 22, height: 22, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1, minWidth: 0 },
   // Long words (e.g. "PrairieLearn") break instead of spilling out of narrow cards; web-only style.

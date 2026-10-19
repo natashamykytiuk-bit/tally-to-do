@@ -279,7 +279,7 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
       onProgress={(progress) => updateItem(r.item.id, { progress })}
       onToggleStep={(stepId) => toggleStep(r.item, stepId, r.date)}
       compact={compact}
-      tint={view === 'plan' ? lists.find((l) => l.id === r.item.listId)?.color : undefined}
+      tint={view === 'plan' || view === 'myday' ? lists.find((l) => l.id === r.item.listId)?.color : undefined}
     />
   );
 
