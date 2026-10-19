@@ -17,6 +17,7 @@ import { useConfetti } from '@/components/confetti';
 import { ProgressCircle } from '@/components/progress-circle';
 import { ProgressMenu, type PointAnchor } from '@/components/progress-menu';
 import { usePalette } from '@/constants/tally';
+import { mixHex } from '@/lib/color';
 import { justDragged } from '@/lib/drag';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
@@ -46,11 +47,14 @@ type Props = {
   onToggleStep: (stepId: string) => void;
   /** Narrow card for the Plan week columns: circle, title and due date only. */
   compact?: boolean;
+  /** List colour to tint the card with (used in Plan). */
+  tint?: string;
 };
 
 export function TaskRow(props: Props) {
   const {
     compact,
+    tint,
     row,
     done,
     today,
@@ -147,7 +151,7 @@ export function TaskRow(props: Props) {
         styles.row,
         compact && styles.compact,
         {
-          backgroundColor: row.late && !done ? c.warnSoft : c.panel,
+          backgroundColor: row.late && !done ? c.warnSoft : tint ? mixHex(c.panel, tint, 0.14) : c.panel,
           shadowColor: c.ink,
           borderColor: selected ? c.accent : 'transparent',
         },
