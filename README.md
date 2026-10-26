@@ -1,55 +1,55 @@
 # Tally
 
-A to-do list and habit tracker in the style of Microsoft To Do. Put one-off tasks and homework into lists (one per class or project). Add recurring tasks once, with how often they repeat, and they appear in **My Day** on the right days. Missed habits either carry over or drop off, and each one shows its current streak.
+Tally is a to-do list and habit tracker, loosely modelled on Microsoft To Do. Homework and one-off tasks go into lists, one per class or project. Recurring tasks are added once with how often they repeat, and they show up in My Day on the right days. A missed habit either carries over or drops off, and each habit keeps a streak.
 
-**Live:** https://tally-to-do.web.app
+Live site: https://tally-to-do.web.app
 
 ## Features
 
-- **My Day:** today's tasks, anything due or planned for today, today's habits and any carried-over misses.
-  - A progress pie next to the title fills as you finish, e.g. "3 of 5 done".
-  - Drag tasks into your own order, or sort by due date, date created or A to Z.
-- **Plan:** a Sunday–Saturday week, with days side by side as columns on a computer and stacked as rows on a phone.
-  - Pick one or more days to work on each task with 🕒, or add tasks straight onto a day.
-  - Drag a task from one day to another.
-  - Each day has a small pie showing how much of what's planned for it is done.
-  - ‹ and › move between weeks, and **This week** jumps back.
-  - Tasks due soon that aren't planned yet wait at the top.
-- **Scheduled:** tasks with due dates, grouped into Overdue, Today, Tomorrow, Later this week, Next week and Later.
-- **Tasks:** everything that isn't in one of your lists, such as tasks added from My Day, Plan, Scheduled or Habits.
-- **Habits:** every repeating task, with its streak.
-- **Lists:** one per class or project.
-  - Each list has its own colour, from presets, a hex code or a colour wheel.
-  - Drag lists to reorder them.
-  - Right-click a list (long-press on a phone), or use **Edit** at the top of it, to rename, recolour or delete it. Deleting a list deletes its tasks, after a warning.
-- **Working with tasks:**
-  - Tick the circle to finish a task. It pops and bursts into confetti, unless your device is set to reduce motion.
-  - Click a title to rename it. Click anywhere else on a task to open its details: steps, notes, list, dates, repeat and Delete.
-  - 🕒 plans the days to work on a task, 📅 sets its due date and ☀ adds it to My Day.
-  - **Partly done:** right-click the circle (long-press on a phone) to mark a task 25%, 50%, 75% or any percent done, and the circle fills to match. Steps fill it too.
-  - **Done for today:** in a task's details, this sets the task aside until tomorrow without finishing it.
-- **Repeats:** every N days, weeks (on the days you pick) or months (on a day of the month), with optional start and end dates.
-  - **If I miss it:** *Carry over* keeps a missed day in My Day, marked late, until it's done. *Let it go* drops it and resets the streak.
-  - **Streaks:** 🔥 counts consecutive on-time check-offs. Late ones don't count.
-- **Settings:**
-  - Light, dark or system theme, and an accent colour.
-  - Import tasks from an Excel or CSV file, sorted into lists by a Class or List column.
-  - Replay the tutorial.
-  - Change your password, sign out, or delete the account along with all its data.
-- **On a computer,** the ‹ next to "Tally" hides the sidebar so tasks get the full width. ☰ brings it back.
-- **New accounts** get a short guided tour.
-- **Accessibility:** every control has a screen-reader label, and headings, dialogs and states (done, partly done, selected) are announced.
+### My Day
+
+Today's tasks, anything due or planned for today, today's habits and any missed habits that carried over. The pie next to the title shows how many are done (for example "3 of 5"). Tasks can be dragged into your own order or sorted by due date, date created or name.
+
+### Plan
+
+A Sunday to Saturday week. On a computer the days are columns; on a phone they're stacked rows. Use the clock button on a task to pick which days you'll work on it, or add a task straight onto a day, and drag tasks between days to move them. Each day has a small pie for how much of its plan is done. The arrows switch weeks and This week jumps back. Tasks due soon that haven't been planned yet sit at the top. In My Day and Plan, each task has a strip on its left edge in its list's colour.
+
+### Scheduled, Tasks and Habits
+
+Scheduled lists tasks with due dates, grouped into Overdue, Today, Tomorrow, Later this week, Next week and Later. Tasks holds anything that isn't in one of your lists, such as tasks added from My Day or Plan. Habits shows every repeating task with its streak.
+
+### Lists
+
+Each list has its own colour, picked from presets, a hex code or a colour wheel. Lists can be dragged to reorder them. Right-click a list (long-press on a phone) or use Edit at the top of it to rename, recolour or delete it. Deleting a list also deletes its tasks, and you're asked first.
+
+### Tasks
+
+Tick the circle to finish a task (there's a small confetti burst unless your device is set to reduce motion). Click the title to rename it, or anywhere else on the task to open its details: steps, notes, list, dates, repeat and delete. The clock button plans work days, the calendar button sets a due date and the sun button adds the task to My Day.
+
+Right-click the circle (long-press on a phone) to mark a task as partly done, at 25%, 50%, 75% or any other percentage. Ticking off steps fills the circle too. "Done for today", in a task's details, puts it aside until tomorrow without finishing it.
+
+### Repeats
+
+Tasks can repeat every few days, on chosen days of the week, or on a day of the month, with optional start and end dates. If a day is missed, "Carry over" keeps it in My Day marked late until it's done, and "Let it go" drops it and resets the streak. Streaks count on-time check-offs in a row; late ones don't count.
+
+### Settings
+
+Light, dark or system theme and an accent colour. You can import tasks from an Excel or CSV file (sorted into lists using a Class or List column), replay the tutorial, change your password, sign out, or delete your account and all its data.
+
+### Other
+
+On a computer the sidebar can be hidden to give tasks the full width, and the menu button brings it back. New accounts get a short tour. Controls have screen-reader labels, and headings, dialogs and task states are announced.
 
 ## Tech
 
-- **App:** [Expo](https://expo.dev) (React Native) with TypeScript and Expo Router. It runs on iOS, Android and the web.
-- **Backend:** Firebase Authentication (email and password), Cloud Firestore and Firebase Hosting.
-- **Dates:** [date-fns](https://date-fns.org). All dates are stored as local `YYYY-MM-DD` strings.
-- **Tests:** Jest (`jest-expo`) covers the scheduling, streak and view logic.
+- [Expo](https://expo.dev) (React Native) with TypeScript and Expo Router, running on iOS, Android and the web
+- Firebase Authentication (email and password), Cloud Firestore and Firebase Hosting
+- [date-fns](https://date-fns.org) for dates, which are stored as local `YYYY-MM-DD` strings
+- Jest (`jest-expo`) tests for the scheduling, streak and view logic
 
 ## Getting started
 
-You'll need Node.js and a Firebase project with **Email/Password** sign-in and **Firestore** enabled.
+You need Node.js and a Firebase project with Email/Password sign-in and Firestore turned on.
 
 1. Install dependencies:
 
@@ -57,19 +57,19 @@ You'll need Node.js and a Firebase project with **Email/Password** sign-in and *
    npm install
    ```
 
-2. Add your Firebase web app keys. In the Firebase console, go to **Project settings → Your apps → Web app**. Copy the template and fill it in:
+2. Copy the env template and fill in your Firebase web app keys (Firebase console, Project settings, Your apps, Web app):
 
    ```bash
    cp .env.example .env.local
    ```
 
-3. Publish the security rules in [`firestore.rules`](firestore.rules). They let each user read and write only their own data:
+3. Publish the security rules in [`firestore.rules`](firestore.rules), which only let each user read and write their own data:
 
    ```bash
    firebase deploy --only firestore:rules
    ```
 
-4. Start the app. Press **w** for the browser, or scan the QR code with [Expo Go](https://expo.dev/go):
+4. Start the app, then press w to open it in the browser or scan the QR code with [Expo Go](https://expo.dev/go):
 
    ```bash
    npx expo start
@@ -89,21 +89,22 @@ You'll need Node.js and a Firebase project with **Email/Password** sign-in and *
 
 ```
 src/
-  app/          Screens (Expo Router): sign-in, the main app, root layout, web HTML shell
-  components/   Sidebar, task rows, detail panel, calendar, repeat editor, settings, …
-  lib/          Pure logic: dates, recurrence and streaks, views, steps, repeat rules (+ __tests__)
-  providers/    Auth, Firestore data and appearance preferences (React context)
+  app/          Screens (Expo Router): sign-in, main app, root layout, web HTML shell
+  components/   Sidebar, task rows, detail panel, calendar, repeat editor, settings and so on
+  lib/          Logic for dates, recurrence and streaks, views, steps and repeat rules, with tests in __tests__
+  providers/    Auth, Firestore data and appearance settings (React context)
   constants/    Colour palette and theme hook
 ```
 
-Data lives under `users/{uid}/` in Firestore:
-- `lists`
-- `items`: tasks, each storing its repeat rule once.
-- `completions`: one per checked-off occurrence.
-- `progress`: step ticks per occurrence.
-- `meta/prefs`: theme and accent colour.
+Firestore data is stored under `users/{uid}/`:
 
-Each day's list is computed from those rules; nothing is copied per day.
+- `lists`
+- `items`: tasks, each with its repeat rule
+- `completions`: one per checked-off occurrence
+- `progress`: ticked steps per occurrence
+- `meta/prefs`: theme and accent colour
+
+Each day's tasks are worked out from the repeat rules rather than copied for every day.
 
 ## License
 
