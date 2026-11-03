@@ -4,6 +4,16 @@ Tally is a to-do list and habit tracker, loosely modelled on Microsoft To Do. Ho
 
 Live site: https://tally-to-do.web.app
 
+## Why I made it
+
+I have ADHD, and I couldn't find a to-do app that worked for me. Most of them are a long list of everything I have to do, which is overwhelming to look at and doesn't help me decide what to do today or when to start something that's due next week. So I built Tally around planning ahead and managing my time:
+
+- **One day at a time.** My Day shows only what's planned for today, what's due, and today's habits, so I'm never staring at the whole list.
+- **Plan the week, not just the deadline.** In Plan I spread big tasks over the days I'll work on them, put each day's tasks in order, and see tasks that are due soon but not planned yet.
+- **Progress counts.** Partly done tasks, steps, "Done for today" and the daily pie show progress even when a task isn't finished.
+- **Room for off days.** "Not today" skips a habit and missed habits can carry over, so one bad day doesn't wreck the plan.
+- **Small rewards.** Streaks and a confetti burst make finishing things feel good.
+
 ## Features
 
 ### My Day
