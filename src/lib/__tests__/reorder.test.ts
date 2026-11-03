@@ -1,4 +1,4 @@
-import { dropIndex, moveIndex, sortRows, zoneAt, zoneAtPoint } from '../reorder';
+import { dropIndex, mergeOrder, moveIndex, slotAt, sortRows, zoneAt, zoneAtPoint } from '../reorder';
 
 test('moveIndex', () => {
   expect(moveIndex(['a', 'b', 'c', 'd'], 0, 2)).toEqual(['b', 'c', 'a', 'd']);
@@ -55,4 +55,16 @@ test('zoneAtPoint finds the column under the pointer', () => {
   expect(zoneAtPoint(zones, 50, 300)).toBe('sun');
   expect(zoneAtPoint(zones, 150, 300)).toBe('mon');
   expect(zoneAtPoint(zones, 500, 300)).toBeNull();
+});
+
+test('slotAt counts the cards above the pointer', () => {
+  expect(slotAt([10, 30, 50], 5)).toBe(0);
+  expect(slotAt([10, 30, 50], 40)).toBe(2);
+  expect(slotAt([10, 30, 50], 99)).toBe(3);
+});
+
+test('mergeOrder reorders a day’s planned tasks around the other saved rows', () => {
+  expect(mergeOrder(['a|', 'h|2026-09-22', 'b|'], ['b|', 'a|'])).toEqual(['b|', 'h|2026-09-22', 'a|']);
+  expect(mergeOrder(['a|', 'h|x'], ['c|', 'a|'])).toEqual(['c|', 'a|', 'h|x']);
+  expect(mergeOrder([], ['a|', 'b|'])).toEqual(['a|', 'b|']);
 });

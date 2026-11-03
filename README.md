@@ -12,7 +12,7 @@ Today's tasks, anything due or planned for today, today's habits and any missed 
 
 ### Plan
 
-A Sunday to Saturday week. On a computer the days are columns; on a phone they're stacked rows. Use the clock button on a task to pick which days you'll work on it, or add a task straight onto a day, and drag tasks between days to move them. Each day has a small pie for how much of its plan is done. The arrows switch weeks and This week jumps back. Tasks due soon that haven't been planned yet sit at the top. In My Day and Plan, each task has a strip on its left edge in its list's colour.
+A Sunday to Saturday week. On a computer the days are columns; on a phone they're stacked rows. Use the clock button on a task to pick which days you'll work on it, or add a task straight onto a day, and drag tasks between days to move them. Drag a task up or down within a day to set the order it shows in My Day that day. Each day has a small pie for how much of its plan is done. The arrows switch weeks and This week jumps back. Tasks due soon that haven't been planned yet sit at the top. In My Day and Plan, each task has a strip on its left edge in its list's colour.
 
 ### Scheduled, Tasks and Habits
 

@@ -34,7 +34,8 @@ import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { addDaysStr, prettyDate, weekLabel, weekStart } from '@/lib/dates';
 import { markedToday, markTodayPatch, movePlanDay, plansOf, plansPatch } from '@/lib/plan';
 import { fractionOf, isDoneForToday, overallProgress } from '@/lib/progress';
-import { SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
+import type { DateStr } from '@/lib/types';
+import { mergeOrder, SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
 import {
   isRowDone,
   isSmartView,
@@ -231,6 +232,8 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
   const thisWeek = weekStart(today);
   const { prefs, setPrefs } = usePrefs();
   const sortMode: SortMode = prefs.mydaySort ?? 'custom';
+  // A day's saved order; today's falls back to the older My Day-only order.
+  const orderOf = (date: DateStr) => prefs.dayOrder?.[date] ?? (date === today ? prefs.mydayOrder : undefined) ?? [];
   const [draft, setDraft] = useState('');
   const [repeat, setRepeat] = useState(false);
   // Habits always adds habits; Scheduled only shows dated one-offs, so a habit added there would vanish.
@@ -308,6 +311,10 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
           const item = items.find((i) => i.id === id);
           if (item) updateItem(id, plansPatch(movePlanDay(plansOf(item), from, to)));
         }}
+        order={prefs.dayOrder ?? {}}
+        onReorder={(date, keys) =>
+          setPrefs({ mydaySort: 'custom', dayOrder: { ...prefs.dayOrder, [date]: mergeOrder(orderOf(date), keys) } })
+        }
         onDragging={setDragging}
       />
     );
@@ -323,12 +330,12 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
         created: r.item.createdAt?.toMillis?.(),
       })),
       sortMode,
-      prefs.mydayOrder,
+      orderOf(today),
     );
     body = (
       <ReorderList
         entries={sorted.map((s) => ({ key: s.key, render: () => renderRow(s.row) }))}
-        onReorder={(keys) => setPrefs({ mydaySort: 'custom', mydayOrder: keys })}
+        onReorder={(keys) => setPrefs({ mydaySort: 'custom', dayOrder: { ...prefs.dayOrder, [today]: keys } })}
         onDragging={setDragging}
       />
     );

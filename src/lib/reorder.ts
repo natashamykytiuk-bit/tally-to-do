@@ -64,3 +64,21 @@ export function zoneAtPoint(zones: Zone2D[], x: number, y: number): string | nul
   );
   return hit?.key ?? null;
 }
+
+/** Where a card dropped at window y lands among cards whose middles are at `mids` (top to bottom). */
+export const slotAt = (mids: number[], y: number): number => mids.filter((m) => m < y).length;
+
+/**
+ * Puts `subset` (some of a day's rows, in their new order) into a saved `order` that may hold other rows too:
+ * they take the slots the subset already had, the others stay put, and any new ones go after the last slot.
+ */
+export function mergeOrder(order: string[], subset: string[]): string[] {
+  const inSubset = new Set(subset);
+  const slots = order.flatMap((k, i) => (inSubset.has(k) ? [i] : []));
+  const out = order.slice();
+  slots.forEach((slot, n) => (out[slot] = subset[n]));
+  const rest = subset.slice(slots.length);
+  if (!slots.length) return [...out, ...rest];
+  const last = slots[slots.length - 1];
+  return [...out.slice(0, last + 1), ...rest, ...out.slice(last + 1)];
+}

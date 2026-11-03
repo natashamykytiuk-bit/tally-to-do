@@ -7,7 +7,7 @@ import { ProgressCircle } from '@/components/progress-circle';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { dow, prettyDate } from '@/lib/dates';
 import { markDragged, rowDrag } from '@/lib/drag';
-import { zoneAtPoint, type Zone2D } from '@/lib/reorder';
+import { slotAt, sortRows, zoneAtPoint, type Zone2D } from '@/lib/reorder';
 import type { DateStr, Item } from '@/lib/types';
 import { fractionOf, overallProgress } from '@/lib/progress';
 import { planDayTasks, planWeek, unplannedSoon } from '@/lib/views';
@@ -24,6 +24,10 @@ type Props = {
   renderRow: (item: Item, compact: boolean) => ReactNode;
   /** Moves one of a task's work days: `from`/`to` are days, or undefined for "not planned". */
   onMove: (id: string, from: DateStr | undefined, to: DateStr | undefined) => void;
+  /** Each day's saved order (row keys, `id|` for these tasks). */
+  order: Record<DateStr, string[]>;
+  /** A day's tasks in their new order, after one is dragged within it or onto it. */
+  onReorder: (date: DateStr, keys: string[]) => void;
   /** Called with true while a drag is in progress, so the page can stop scrolling. */
   onDragging: (dragging: boolean) => void;
 };
@@ -31,20 +35,37 @@ type Props = {
 /**
  * The Plan view: tasks due soon that aren't planned yet, then the week (Sun–Sat): side-by-side columns on a
  * computer, stacked rows (one per day) on a phone.
- * Drag a task onto a day to plan it there, or onto "Due soon" to un-plan it.
+ * Drag a task onto a day to plan it there, or onto "Due soon" to un-plan it. Drag within a day (or onto a spot in
+ * another) to set the order it shows in My Day on that day.
  */
-export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDragging }: Props) {
+export function PlanBoard({ items, today, weekStart, renderRow, onMove, order, onReorder, onDragging }: Props) {
   const c = usePalette();
   const columnsLayout = useWindowDimensions().width >= WIDE_BREAKPOINT;
   const soon = unplannedSoon(items, today);
-  const week = planWeek(items, today, weekStart);
+  const keyOf = (item: Item) => `${item.id}|`;
+  const week = planWeek(items, today, weekStart).map((d) => ({
+    ...d,
+    items: sortRows(
+      d.items.map((item) => ({ item, key: keyOf(item), title: item.title })),
+      'custom',
+      order[d.date],
+    ).map((r) => r.item),
+  }));
 
   // Drop zones (the "due soon" area and each day column) are measured when a drag starts.
   const zoneViews = useRef(new Map<string, View>());
   const zones = useRef<Zone2D[]>([]);
-  const [drag, setDrag] = useState<{ id: string; from: string; dx: number; dy: number; over: string | null } | null>(
-    null,
-  );
+  // Each day's cards (`day|id` → view), and their middles (window y) measured when a drag starts.
+  const cardViews = useRef(new Map<string, View>());
+  const cardMids = useRef(new Map<string, number>());
+  const [drag, setDrag] = useState<{
+    id: string;
+    from: string;
+    dx: number;
+    dy: number;
+    y: number;
+    over: string | null;
+  } | null>(null);
   const dragRef = useRef(drag);
   dragRef.current = drag;
 
@@ -57,6 +78,19 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
         ),
       ),
     );
+    cardMids.current.clear();
+    cardViews.current.forEach((view, key) =>
+      view?.measureInWindow((_x, y, _w, h) => cardMids.current.set(key, y + h / 2)),
+    );
+  };
+
+  /** The day's tasks with the dragged one dropped at window y. */
+  const dropOrder = (date: string, id: string, y: number): string[] => {
+    const others = (week.find((d) => d.date === date)?.items ?? []).filter((i) => i.id !== id);
+    const mids = others.map((i) => cardMids.current.get(`${date}|${i.id}`) ?? Infinity);
+    const keys = others.map(keyOf);
+    keys.splice(slotAt(mids, y), 0, `${id}|`);
+    return keys;
   };
 
   const gesture = (id: string, from: string) =>
@@ -64,7 +98,7 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
       .onStart(() => {
         measure();
         onDragging(true);
-        setDrag({ id, from, dx: 0, dy: 0, over: from });
+        setDrag({ id, from, dx: 0, dy: 0, y: 0, over: from });
       })
       .onUpdate((e) =>
         setDrag(
@@ -73,6 +107,7 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
               ...d,
               dx: e.translationX,
               dy: e.translationY,
+              y: e.absoluteY,
               over: zoneAtPoint(zones.current, e.absoluteX, e.absoluteY),
             },
         ),
@@ -81,7 +116,12 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
         markDragged(); // only runs after a real drag, not a plain click
         const d = dragRef.current;
         const day = (k: string) => (k === UNPLANNED ? undefined : k);
-        if (d?.over && d.over !== d.from) onMove(d.id, day(d.from), day(d.over));
+        if (!d?.over) return;
+        if (d.over !== d.from) onMove(d.id, day(d.from), day(d.over));
+        if (d.over === UNPLANNED) return;
+        const keys = dropOrder(d.over, d.id, d.y);
+        const before = (week.find((w) => w.date === d.over)?.items ?? []).map(keyOf);
+        if (keys.join() !== before.join()) onReorder(d.over, keys);
       })
       .onFinalize(() => {
         setDrag(null);
@@ -95,6 +135,11 @@ export function PlanBoard({ items, today, weekStart, renderRow, onMove, onDraggi
       return (
         <GestureDetector key={item.id} gesture={gesture(item.id, from)}>
           <View
+            ref={(v) => {
+              const k = `${from}|${item.id}`;
+              if (v) cardViews.current.set(k, v);
+              else cardViews.current.delete(k);
+            }}
             style={
               moving && { transform: [{ translateX: drag.dx }, { translateY: drag.dy }], zIndex: 30, opacity: 0.92 }
             }>
