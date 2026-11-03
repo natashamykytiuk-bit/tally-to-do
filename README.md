@@ -4,15 +4,13 @@ Tally is a to-do list and habit tracker, loosely modelled on Microsoft To Do. Ho
 
 Live site: https://tally-to-do.web.app
 
-## Why I made it
+## Why I built this
 
-I have ADHD, and I couldn't find a to-do app that worked for me. Most of them are a long list of everything I have to do, which is overwhelming to look at and doesn't help me decide what to do today or when to start something that's due next week. So I built Tally around planning ahead and managing my time:
+I have ADHD, and I built Tally because I couldn't find a to-do app that worked with the way I think. Most task managers present everything as one long list. For me, that list is overwhelming to look at, and it doesn't answer the questions I actually need answered: what should I work on today, and when do I need to start something that's due next week? A due date on its own isn't a plan.
 
-- **One day at a time.** My Day shows only what's planned for today, what's due, and today's habits, so I'm never staring at the whole list.
-- **Plan the week, not just the deadline.** In Plan I spread big tasks over the days I'll work on them, put each day's tasks in order, and see tasks that are due soon but not planned yet.
-- **Progress counts.** Partly done tasks, steps, "Done for today" and the daily pie show progress even when a task isn't finished.
-- **Room for off days.** "Not today" skips a habit and missed habits can carry over, so one bad day doesn't wreck the plan.
-- **Small rewards.** Streaks and a confetti burst make finishing things feel good.
+Tally is designed around planning ahead and managing time, rather than just recording tasks. My Day shows only what matters today: the work I planned for today, anything due, and today's habits. The Plan view is where the planning happens. Larger assignments can be spread across the days I'll work on them, each day's tasks can be put in order, and anything due soon that doesn't have a plan yet is flagged at the top of the week.
+
+I also designed it to give credit for progress, not just completion. Steps, partial progress, "Done for today" and the daily progress pie all show work that is underway. Off days are expected, so a habit can be skipped with "Not today" or carried over when it's missed, without derailing the rest of the plan. Streaks and a small confetti burst add some positive reinforcement when things get done.
 
 ## Features
 
