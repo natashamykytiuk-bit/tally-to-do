@@ -1,6 +1,6 @@
 import { addDaysStr, weekStart } from './dates';
 import { planOverdue, plannedToday, plansOf } from './plan';
-import { isDoneForToday } from './progress';
+import { isDoneForToday, isNotToday } from './progress';
 import { occursOn, pendingMissed } from './recurrence';
 import type { CompletionMap, DateStr, Item } from './types';
 
@@ -57,8 +57,9 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
   for (const item of items) {
     const one = (): Row => ({ item, date: null, late: false });
     if (view === 'myday') {
-      if (item.rule) rows.push(...recurringRows(item, today, all));
-      else if (item.myDay === today || (item.due && item.due <= today && !item.done) || plannedToday(item, today)) rows.push(one());
+      if (item.rule) {
+        if (!isNotToday(item, today)) rows.push(...recurringRows(item, today, all));
+      } else if (item.myDay === today || (item.due && item.due <= today && !item.done) || plannedToday(item, today)) rows.push(one());
       else if (item.done && plansOf(item).includes(today)) rows.push(one());
       else if (item.done && item.due === today) rows.push(one());
     } else if (view === 'planned') {
@@ -77,7 +78,7 @@ export function rowsFor(view: ViewId, items: Item[], today: DateStr, all: AllCom
 
 export const openCount = (view: ViewId, items: Item[], today: DateStr, all: AllCompletions) =>
   rowsFor(view, items, today, all).filter(
-    (r) => !isRowDone(r, all) && !isDoneForToday(r.item, today) && !(r.item.rule && !r.date),
+    (r) => !isRowDone(r, all) && !isDoneForToday(r.item, today) && !isNotToday(r.item, today) && !(r.item.rule && !r.date),
   ).length;
 
 /** Scheduled view groups, in display order. Weeks run Sunday to Saturday. */

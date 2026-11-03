@@ -7,7 +7,7 @@ import { RepeatEditor } from '@/components/repeat-editor';
 import { StepsEditor } from '@/components/steps-editor';
 import { usePalette } from '@/constants/tally';
 import { addDaysStr, dow, prettyDate } from '@/lib/dates';
-import { plansOf, plansPatch, togglePlanDay } from '@/lib/plan';
+import { markedToday, markTodayPatch, plansOf, plansPatch, togglePlanDay } from '@/lib/plan';
 import { isDoneForToday } from '@/lib/progress';
 import type { Item } from '@/lib/types';
 import { useData } from '@/providers/data';
@@ -25,6 +25,7 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
 
   const set = (patch: Partial<Item>) => updateItem(item.id, patch);
   const restingToday = isDoneForToday(item, today);
+  const skippedToday = item.notToday === today;
   const saveTitle = () => {
     const t = title.trim();
     if (t && t !== item.title) set({ title: t });
@@ -95,6 +96,30 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
         </View>
       </View>
 
+      {!!item.rule && (
+        <View style={card}>
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: c.ink, fontSize: 15 }}>{skippedToday ? '✓ Not today' : 'Not today'}</Text>
+              <Text style={[styles.hint, { color: c.muted }]}>
+                {skippedToday
+                  ? 'Hidden from My Day and left out of today’s count.'
+                  : 'Skip it today: hides it from My Day and takes it out of today’s count.'}
+              </Text>
+            </View>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => set({ notToday: skippedToday ? undefined : today })}
+              accessibilityLabel={skippedToday ? 'Undo not today' : 'Not today'}
+              style={[styles.btn, { backgroundColor: skippedToday ? c.accentSoft : c.accent }]}>
+              <Text style={{ color: skippedToday ? c.accent : '#fff', fontWeight: '600' }}>
+                {skippedToday ? 'Undo' : 'Not today'}
+              </Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+
       {!item.rule && !item.done && (
         <View style={card}>
           <View style={styles.row}>
@@ -126,8 +151,8 @@ export function TaskDetail({ item, onClose }: { item: Item; onClose: () => void 
             <Text style={{ color: c.ink, fontSize: 15 }}>☀ Add to My Day</Text>
             <Switch
               accessibilityLabel="Add to My Day"
-              value={item.myDay === today}
-              onValueChange={(on) => set({ myDay: on ? today : undefined })}
+              value={markedToday(item, today)}
+              onValueChange={(on) => set(markTodayPatch(item, today, on))}
               trackColor={{ true: c.accent }}
             />
           </View>

@@ -128,6 +128,14 @@ test('Tasks shows tasks without a list; smart views add tasks with no list', () 
   for (const v of ['myday', 'plan', 'planned', 'habits', 'nolist']) expect(newItemDefaults(v, TUE).listId).toBeUndefined();
 });
 
+test('Not today hides a recurring task from My Day and the counts, for today only', () => {
+  const t: Item[] = [{ id: 'h', title: 'Run', rule: { type: 'daily' }, startDate: TUE, notToday: TUE }];
+  expect(rowsFor('myday', t, TUE, {})).toEqual([]);
+  expect(ids(rowsFor('habits', t, TUE, {}))).toEqual([`h@${TUE}`]);
+  expect(openCount('habits', t, TUE, {})).toBe(0);
+  expect(openCount('myday', t, '2026-09-23', {})).toBe(1);
+});
+
 test('Done for today moves out of the open count until tomorrow', () => {
   const t: Item[] = [{ id: 'e', title: 'Essay', myDay: TUE, doneForDay: TUE }, { id: 'f', title: 'Read', myDay: TUE }];
   expect(openCount('myday', t, TUE, {})).toBe(1);

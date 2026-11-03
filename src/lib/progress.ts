@@ -26,6 +26,9 @@ export function fractionOf(item: Item, date: DateStr | null, done: boolean, prog
 export const isDoneForToday = (item: Item, today: DateStr): boolean =>
   !item.rule && !item.done && item.doneForDay === today;
 
+/** Skipped for today with "Not today" (recurring tasks). */
+export const isNotToday = (item: Item, today: DateStr): boolean => !!item.rule && item.notToday === today;
+
 /** Overall progress for a set of tasks: each counts 0–1 (partial progress counts for its share). */
 export function overallProgress(fractions: number[]): { done: number; total: number; fraction: number } {
   const total = fractions.length;

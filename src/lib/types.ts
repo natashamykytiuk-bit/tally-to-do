@@ -39,6 +39,8 @@ export type Item = {
   doneForDay?: DateStr;
   completedAt?: Timestamp;
   // recurring only
+  /** Skipped with "Not today" on this date. */
+  notToday?: DateStr;
   rule?: Rule | null;
   startDate?: DateStr;
   endDate?: DateStr;

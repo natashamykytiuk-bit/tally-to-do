@@ -1,8 +1,24 @@
-import { movePlanDay, planLabel, plannedToday, plansOf, plansPatch, togglePlanDay } from '../plan';
+import { markedToday, markTodayPatch, movePlanDay, planLabel, plannedToday, plansOf, plansPatch, togglePlanDay } from '../plan';
 import type { Item } from '../types';
 
 const TUE = '2026-09-22';
 const task = (x: Partial<Item>): Item => ({ id: 't', listId: 'l', title: 'Essay', ...x });
+
+test('markedToday: the sun button or a work day today', () => {
+  expect(markedToday(task({ myDay: TUE }), TUE)).toBe(true);
+  expect(markedToday(task({ plans: [TUE] }), TUE)).toBe(true);
+  expect(markedToday(task({ plans: ['2026-09-23'] }), TUE)).toBe(false);
+});
+
+test('markTodayPatch: clearing also removes today as a work day, keeping the others', () => {
+  expect(markTodayPatch(task({}), TUE, true)).toEqual({ myDay: TUE });
+  expect(markTodayPatch(task({ myDay: TUE }), TUE, false)).toEqual({ myDay: undefined });
+  expect(markTodayPatch(task({ plans: [TUE, '2026-09-23'] }), TUE, false)).toEqual({
+    myDay: undefined,
+    plans: ['2026-09-23'],
+    plan: undefined,
+  });
+});
 
 test('plansOf reads the list, the old single field, and sorts / de-duplicates', () => {
   expect(plansOf(task({ plans: ['2026-09-24', '2026-09-22', '2026-09-24'] }))).toEqual(['2026-09-22', '2026-09-24']);

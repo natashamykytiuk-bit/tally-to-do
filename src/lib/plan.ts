@@ -33,6 +33,17 @@ export const planOverdue = (item: Item, today: DateStr): boolean => {
 export const plannedToday = (item: Item, today: DateStr): boolean =>
   !item.done && (plansOf(item).includes(today) || planOverdue(item, today));
 
+/** Marked for today, either with the sun button or as a work day. */
+export const markedToday = (item: Item, today: DateStr): boolean =>
+  item.myDay === today || plansOf(item).includes(today);
+
+/** Patch that marks the task for today, or clears both ways of marking it. */
+export const markTodayPatch = (item: Item, today: DateStr, on: boolean): Partial<Item> => {
+  if (on) return { myDay: today };
+  const days = plansOf(item);
+  return { myDay: undefined, ...(days.includes(today) && plansPatch(days.filter((d) => d !== today))) };
+};
+
 /** Row text, e.g. "Work on today", "Work on Wed, Sep 23 + 2 more", or "Planned Mon, Sep 21" when overdue. */
 export function planLabel(item: Item, today: DateStr): { text: string; warn: boolean } | null {
   const days = plansOf(item);

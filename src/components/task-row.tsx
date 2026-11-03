@@ -20,7 +20,7 @@ import { usePalette } from '@/constants/tally';
 import { justDragged } from '@/lib/drag';
 import { prettyDate } from '@/lib/dates';
 import { scheduleText, streak } from '@/lib/recurrence';
-import { planLabel, plansOf } from '@/lib/plan';
+import { markedToday, planLabel, plansOf } from '@/lib/plan';
 import { fractionOf, isDoneForToday } from '@/lib/progress';
 import { isStepDone, stepCount, type AllProgress } from '@/lib/steps';
 import type { DateStr, List } from '@/lib/types';
@@ -113,10 +113,11 @@ export function TaskRow(props: Props) {
   };
 
   const meta: { text: string; warn?: boolean }[] = [];
-  const inMyDay = item.myDay === today;
+  const inMyDay = markedToday(item, today);
   const steps = item.steps ?? [];
   const sc = stepCount(item, row.date, progress);
   if (restingToday) meta.push({ text: 'Done for today' });
+  if (item.rule && item.notToday === today) meta.push({ text: 'Not today' });
   if (!done && fraction > 0 && fraction < 1) meta.push({ text: `${Math.round(fraction * 100)}%` });
   if (list) meta.push({ text: list.name });
   if (steps.length) meta.push({ text: `${sc.done} of ${sc.total}` });

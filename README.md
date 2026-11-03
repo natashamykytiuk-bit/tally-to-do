@@ -30,7 +30,7 @@ Right-click the circle (long-press on a phone) to mark a task as partly done, at
 
 ### Repeats
 
-Tasks can repeat every few days, on chosen days of the week, or on a day of the month, with optional start and end dates. If a day is missed, "Carry over" keeps it in My Day marked late until it's done, and "Let it go" drops it and resets the streak. Streaks count on-time check-offs in a row; late ones don't count.
+Tasks can repeat every few days, on chosen days of the week, or on a day of the month, with optional start and end dates. If a day is missed, "Carry over" keeps it in My Day marked late until it's done, and "Let it go" drops it and resets the streak. "Not today", in a repeating task's details, hides it from My Day and today's count; undo it from Habits or the task's list. Streaks count on-time check-offs in a row; late ones don't count.
 
 ### Settings
 

@@ -32,7 +32,7 @@ import { TaskRow } from '@/components/task-row';
 import { Tour } from '@/components/tour';
 import { usePalette, WIDE_BREAKPOINT } from '@/constants/tally';
 import { addDaysStr, prettyDate, weekLabel, weekStart } from '@/lib/dates';
-import { movePlanDay, plansOf, plansPatch } from '@/lib/plan';
+import { markedToday, markTodayPatch, movePlanDay, plansOf, plansPatch } from '@/lib/plan';
 import { fractionOf, isDoneForToday, overallProgress } from '@/lib/progress';
 import { SORT_MODES, sortRows, type SortMode } from '@/lib/reorder';
 import {
@@ -272,7 +272,7 @@ function MainList({ view, onMenu, menuLabel, full, selId, onOpen, onEditList }: 
       selected={selId === r.item.id}
       onPress={() => onOpen(r.item.id)}
       onToggle={() => toggle(r.item, r.date)}
-      onMyDay={() => updateItem(r.item.id, { myDay: r.item.myDay === today ? undefined : today })}
+      onMyDay={() => updateItem(r.item.id, markTodayPatch(r.item, today, !markedToday(r.item, today)))}
       onDue={(due) => updateItem(r.item.id, { due })}
       onPlan={(days) => updateItem(r.item.id, plansPatch(days))}
       onRename={(title) => updateItem(r.item.id, { title })}
